@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>COMON FIX-STABLE</title>
+    <title>COMON FINAL-EDITION</title>
     <style>
         :root { --main-blue: #007aff; --bg-gray: #f0f2f5; --sidebar-w: 260px; }
         body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg-gray); color: #1c1e21; overflow-x: hidden; }
@@ -16,9 +16,9 @@
         .card { background: white; padding: 18px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px; }
         input, button, textarea { display: block; width: 100%; padding: 14px; margin: 12px 0; box-sizing: border-box; border-radius: 12px; border: 1px solid #ddd; font-size: 16px; }
         button { background: var(--main-blue); color: white; border: none; font-weight: bold; cursor: pointer; }
-        button:disabled { background: #ccc; }
         .secondary-btn { background: #8e8e93; margin-top: 5px; }
-        .kick-btn { background: #ff3b30; padding: 5px 10px; font-size: 12px; width: auto; display: inline-block; margin: 0; }
+        .danger-btn { background: #ff3b30; }
+        .kick-btn { background: #ff3b30; padding: 5px 10px; font-size: 11px; width: auto; display: inline-block; margin: 0; }
         #msg-list { display: flex; flex-direction: column-reverse; gap: 12px; }
         .msg-bubble { display: flex; align-items: flex-start; gap: 8px; max-width: 85%; }
         .msg-bubble.mine { align-self: flex-end; flex-direction: row-reverse; }
@@ -35,9 +35,11 @@
 <body>
     <div id="overlay" onclick="closeAllMenus()"></div>
     <div id="member-modal">
-        <h3 id="modal-title">ルーム管理</h3>
-        <p id="modal-id-pass"></p><hr>
-        <h4>参加者</h4><div id="member-list-area"></div>
+        <h3 id="modal-title">ルーム詳細</h3>
+        <p id="modal-id-pass" style="background:#f8f9fa; padding:10px; border-radius:10px; font-family:monospace;"></p>
+        <hr>
+        <h4>メンバー</h4><div id="member-list-area" style="max-height:200px; overflow-y:auto;"></div>
+        <button onclick="leaveRoom()" class="danger-btn" style="margin-top:20px;">🚪 このトークから退出する</button>
         <button onclick="document.getElementById('member-modal').style.display='none'" class="secondary-btn">閉じる</button>
     </div>
 
@@ -61,23 +63,19 @@
         <div id="login-view" class="view">
             <div class="card"><input type="email" id="email" placeholder="メール"><input type="password" id="password" placeholder="パスワード"><button onclick="login()">ログイン</button><button onclick="signUp()" class="secondary-btn">新規登録</button></div>
         </div>
-
         <div id="home-view" class="view">
             <div class="card"><button onclick="createRoom()">＋ ルームを新規作成</button><button onclick="showJoinForm()" class="secondary-btn">🔑 IDでルームに参加</button></div>
             <div id="join-form" class="card" style="display:none; border:2px solid var(--main-blue);"><input type="text" id="join-id" placeholder="ルームID"><input type="text" id="join-pass" placeholder="6桁パスワード"><button onclick="joinRoom()">参加確定</button></div>
             <h4 style="margin:10px 0;">参加中のトークルーム</h4>
             <div id="room-list"></div>
         </div>
-
         <div id="chat-view" class="view">
             <div id="msg-list"></div>
             <div class="input-bar"><a href="https://gigafile.nu/" target="_blank" class="btn-round">📁</a><div id="mic-btn" class="btn-round" onclick="toggleRecording()">🎤</div><input type="text" id="chat-input" placeholder="メッセージ..."><button id="send-btn" onclick="sendMessage()" style="width:60px; margin:0;">送信</button></div>
         </div>
-
         <div id="profile-view" class="view">
-            <div class="card"><h3>設定</h3><input type="text" id="p-emoji-input" placeholder="絵文字" maxlength="2"><input type="text" id="p-name-input" placeholder="名前"><button onclick="updateProfile()">保存</button></div>
+            <div class="card"><h3>プロフィール設定</h3><input type="text" id="p-emoji-input" placeholder="絵文字" maxlength="2"><input type="text" id="p-name-input" placeholder="名前"><button onclick="updateProfile()">保存</button></div>
         </div>
-
         <div id="memo-view" class="view">
             <div class="card"><h3>📝 メモ帳</h3><textarea id="memo-input" style="height:450px; width:100%; font-size:16px; border:none; outline:none;" placeholder="自動保存されます。"></textarea></div>
         </div>
@@ -89,77 +87,47 @@
         import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, doc, getDoc, setDoc, where, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyAP_BaYs01oniLSPQ5EOPV9m9brjKn-A2c", authDomain: "soshozi.firebaseapp.com", projectId: "soshozi", storageBucket: "soshozi.firebasestorage.app", messagingSenderId: "607624264440", appId: "1:607624264440:web:f3798bdc083a78b426190d" };
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
+        const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
         let userProfile = { name: "名無し", emoji: "👤" }, mediaRecorder, audioChunks = [];
 
         window.toggleMenu = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').style.display = document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none'; };
         window.closeAllMenus = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').style.display = 'none'; };
         window.changeTab = (t) => { location.hash = t === 'home' ? '' : t; closeAllMenus(); };
-
-        const showView = (id) => {
-            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-            document.getElementById(id).style.display = 'block';
-            document.getElementById('room-controls').style.display = (id === 'chat-view') ? 'block' : 'none';
-        };
+        const showView = (id) => { document.querySelectorAll('.view').forEach(v => v.style.display = 'none'); document.getElementById(id).style.display = 'block'; document.getElementById('room-controls').style.display = (id === 'chat-view') ? 'block' : 'none'; };
 
         onAuthStateChanged(auth, async user => {
             if (user) {
                 const uDoc = await getDoc(doc(db, "users", user.uid));
-                if (uDoc.exists()) {
-                    userProfile = uDoc.data();
-                    document.getElementById('p-name-input').value = userProfile.name;
-                    document.getElementById('p-emoji-input').value = userProfile.emoji;
-                }
+                if (uDoc.exists()) userProfile = uDoc.data();
                 const h = location.hash.substring(1);
                 if(h === "profile") showView('profile-view');
-                else if(h === "memo") {
-                    showView('memo-view');
-                    const mDoc = await getDoc(doc(db, "memos", user.uid));
-                    if(mDoc.exists()) document.getElementById('memo-input').value = mDoc.data().text;
-                }
+                else if(h === "memo") { showView('memo-view'); const mDoc = await getDoc(doc(db, "memos", user.uid)); if(mDoc.exists()) document.getElementById('memo-input').value = mDoc.data().text; }
                 else if(h !== "") {
                     const rSnap = await getDoc(doc(db, "rooms", h));
                     if(rSnap.exists() && rSnap.data().members.includes(user.uid)) { showView('chat-view'); loadMessages(h); }
-                    else { alert("参加権限なし"); location.hash = ""; }
-                }
-                else { showView('home-view'); loadRooms(); }
+                    else { alert("参加していないルームです"); location.hash = ""; }
+                } else { showView('home-view'); loadRooms(); }
             } else { showView('login-view'); }
         });
 
-        // 自分が参加しているルーム一覧を確実に取得する修正版
         function loadRooms() {
-            // orderByを外してインデックスエラーを回避し、確実にデータを取得
             const q = query(collection(db, "rooms"), where("members", "array-contains", auth.currentUser.uid));
             onSnapshot(q, s => {
                 const l = document.getElementById('room-list'); l.innerHTML = "";
-                let rooms = [];
-                s.forEach(d => rooms.push({id: d.id, ...d.data()}));
-                // ブラウザ側で並べ替え
-                rooms.sort((a,b) => b.createdAt - a.createdAt);
-                rooms.forEach(data => {
+                let rooms = []; s.forEach(d => rooms.push({id: d.id, ...d.data()}));
+                rooms.sort((a,b) => b.createdAt - a.createdAt).forEach(data => {
                     l.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;"><b>${data.name}</b><button onclick="location.hash='${data.id}'" style="width:70px; margin:0;">入る</button></div>`;
                 });
             });
         }
 
-        window.createRoom = async () => {
-            const n = prompt("ルーム名"); if(!n) return;
-            const rid = Math.random().toString(36).substring(2, 8).toUpperCase(), rpass = Math.floor(100000 + Math.random() * 900000).toString();
-            // 最初から作成者をmembersに入れて永続化
-            await setDoc(doc(db, "rooms", rid), { name: n, host: auth.currentUser.uid, password: rpass, members: [auth.currentUser.uid], createdAt: Date.now() });
-            location.hash = rid;
-        };
-
-        window.joinRoom = async () => {
-            const id = document.getElementById('join-id').value.trim().toUpperCase(), pass = document.getElementById('join-pass').value.trim();
-            const rSnap = await getDoc(doc(db, "rooms", id));
-            if(rSnap.exists() && rSnap.data().password === pass) {
-                await updateDoc(doc(db, "rooms", id), { members: arrayUnion(auth.currentUser.uid) });
-                location.hash = id;
-            } else { alert("IDかパスが違います"); }
+        // 退出機能
+        window.leaveRoom = async () => {
+            const rid = location.hash.substring(1);
+            if(!confirm("このトークルームから退出しますか？リストからも削除されます。")) return;
+            await updateDoc(doc(db, "rooms", rid), { members: arrayRemove(auth.currentUser.uid) });
+            document.getElementById('member-modal').style.display = 'none';
+            location.hash = "";
         };
 
         window.showRoomManager = async () => {
@@ -181,60 +149,18 @@
             listArea.innerHTML = html;
         };
 
-        window.kickUser = async (uid) => {
-            if(!confirm("追放しますか？")) return;
-            await updateDoc(doc(db, "rooms", location.hash.substring(1)), { members: arrayRemove(uid) });
-            showRoomManager();
-        };
-
-        window.sendMessage = async () => {
-            const btn = document.getElementById('send-btn'), input = document.getElementById('chat-input'), rid = location.hash.substring(1);
-            if (!input.value.trim() || btn.disabled) return;
-            btn.disabled = true;
-            try { await addDoc(collection(db, `rooms/${rid}/messages`), { uid: auth.currentUser.uid, name: userProfile.name, emoji: userProfile.emoji, text: input.value.trim(), createdAt: Date.now() }); input.value = ""; } 
-            catch(e) { alert("エラー: " + e.code); } finally { btn.disabled = false; }
-        };
-
-        window.toggleRecording = async () => {
-            const btn = document.getElementById('mic-btn');
-            if (mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); btn.style.background = "#f0f2f5"; }
-            else {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    const mimeType = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/webm';
-                    mediaRecorder = new MediaRecorder(stream, { audioBitsPerSecond: 32000, mimeType });
-                    audioChunks = [];
-                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                    mediaRecorder.onstop = async () => {
-                        const blob = new Blob(audioChunks, { type: mimeType });
-                        if (blob.size > 1000000) return alert("短く話してね");
-                        const reader = new FileReader(); reader.readAsDataURL(blob);
-                        reader.onloadend = async () => { await addDoc(collection(db, `rooms/${location.hash.substring(1)}/messages`), { uid: auth.currentUser.uid, name: userProfile.name, emoji: userProfile.emoji, voiceData: reader.result, createdAt: Date.now() }); };
-                    };
-                    mediaRecorder.start(); btn.style.background = "#ff3b30";
-                } catch(e) { alert("マイク不可"); }
-            }
-        };
-
+        window.kickUser = async (uid) => { if(confirm("追放しますか？")) { await updateDoc(doc(db, "rooms", location.hash.substring(1)), { members: arrayRemove(uid) }); showRoomManager(); } };
+        window.createRoom = async () => { const n = prompt("ルーム名"); if(!n) return; const rid = Math.random().toString(36).substring(2, 8).toUpperCase(), rpass = Math.floor(100000 + Math.random() * 900000).toString(); await setDoc(doc(db, "rooms", rid), { name: n, host: auth.currentUser.uid, password: rpass, members: [auth.currentUser.uid], createdAt: Date.now() }); location.hash = rid; };
+        window.joinRoom = async () => { const id = document.getElementById('join-id').value.trim().toUpperCase(), pass = document.getElementById('join-pass').value.trim(), rSnap = await getDoc(doc(db, "rooms", id)); if(rSnap.exists() && rSnap.data().password === pass) { await updateDoc(doc(db, "rooms", id), { members: arrayUnion(auth.currentUser.uid) }); location.hash = id; } else { alert("間違いがあります"); } };
+        window.sendMessage = async () => { const btn = document.getElementById('send-btn'), input = document.getElementById('chat-input'), rid = location.hash.substring(1); if (!input.value.trim() || btn.disabled) return; btn.disabled = true; try { await addDoc(collection(db, `rooms/${rid}/messages`), { uid: auth.currentUser.uid, name: userProfile.name, emoji: userProfile.emoji, text: input.value.trim(), createdAt: Date.now() }); input.value = ""; } finally { btn.disabled = false; } };
+        window.toggleRecording = async () => { const btn = document.getElementById('mic-btn'); if (mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); btn.style.background = "#f0f2f5"; } else { try { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }), mimeType = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/webm'; mediaRecorder = new MediaRecorder(stream, { audioBitsPerSecond: 32000, mimeType }); audioChunks = []; mediaRecorder.ondataavailable = e => audioChunks.push(e.data); mediaRecorder.onstop = async () => { const blob = new Blob(audioChunks, { type: mimeType }); if (blob.size > 1000000) return alert("短く話してね"); const reader = new FileReader(); reader.readAsDataURL(blob); reader.onloadend = async () => { await addDoc(collection(db, `rooms/${location.hash.substring(1)}/messages`), { uid: auth.currentUser.uid, name: userProfile.name, emoji: userProfile.emoji, voiceData: reader.result, createdAt: Date.now() }); }; }; mediaRecorder.start(); btn.style.background = "#ff3b30"; } catch(e) { alert("マイク不可"); } } };
         document.getElementById('memo-input').oninput = async (e) => { if(auth.currentUser) await setDoc(doc(db, "memos", auth.currentUser.uid), { text: e.target.value }); };
         window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(e => alert("ログイン不可"));
         window.signUp = () => createUserWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(e => alert("登録不可"));
         window.logout = () => signOut(auth).then(() => { location.hash = ""; location.reload(); });
         window.showJoinForm = () => document.getElementById('join-form').style.display = 'block';
         window.updateProfile = async () => { await setDoc(doc(db, "users", auth.currentUser.uid), { name: document.getElementById('p-name-input').value, emoji: document.getElementById('p-emoji-input').value }, { merge: true }); location.hash = ""; location.reload(); };
-        function loadMessages(rid) {
-            onSnapshot(query(collection(db, `rooms/${rid}/messages`), orderBy("createdAt", "desc")), s => {
-                const l = document.getElementById('msg-list'); l.innerHTML = "";
-                s.forEach(d => {
-                    const data = d.data(), isMine = data.uid === auth.currentUser.uid;
-                    let content = (data.text || "").replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:inherit;">$1</a>');
-                    if (data.voiceData) content += `<audio controls src="${data.voiceData}"></audio>`;
-                    const item = document.createElement('div'); item.className = `msg-bubble ${isMine ? 'mine' : ''}`;
-                    item.innerHTML = `<div class="user-emoji">${data.emoji || '👤'}</div><div class="msg-content"><small style="opacity:0.6; font-size:10px;">${data.name}</small><br>${content}</div>`;
-                    l.appendChild(item);
-                });
-            });
-        }
+        function loadMessages(rid) { onSnapshot(query(collection(db, `rooms/${rid}/messages`), orderBy("createdAt", "desc")), s => { const l = document.getElementById('msg-list'); l.innerHTML = ""; s.forEach(d => { const data = d.data(), isMine = data.uid === auth.currentUser.uid; let content = (data.text || "").replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:inherit;">$1</a>'); if (data.voiceData) content += `<audio controls src="${data.voiceData}"></audio>`; const item = document.createElement('div'); item.className = `msg-bubble ${isMine ? 'mine' : ''}`; item.innerHTML = `<div class="user-emoji">${data.emoji || '👤'}</div><div class="msg-content"><small style="opacity:0.6; font-size:10px;">${data.name}</small><br>${content}</div>`; l.appendChild(item); }); }); }
         window.onhashchange = () => location.reload();
     </script>
 </body>
