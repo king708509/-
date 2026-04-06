@@ -9,7 +9,6 @@
         :root { --bg-main:#111; --bg-card:#1c1c1e; --bg-input:#2c2c2e; --text-main:#fff; --text-muted:#8e8e93; --my-blue:#007AFF; --line-green:#06c755; --border:#2c2c2e; --error-red:#ff3b30; }
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: #000; font-family: 'Zen Maru Gothic', sans-serif; color: var(--text-main); -webkit-tap-highlight-color: transparent; }
         
-        /* 初期状態は全て隠す */
         #app-body { display: none; height: 100vh; flex-direction: column; background: var(--bg-main); padding-top: env(safe-area-inset-top); }
         .view { display: none; }
 
@@ -25,10 +24,18 @@
         .msg-content { padding: 10px 15px; border-radius: 18px; font-size: 15px; line-height: 1.5; word-break: break-all; background: var(--bg-card); }
         .mine .msg-content { background: var(--line-green); border-bottom-right-radius: 4px; }
         
-        .input-bar { position: fixed; bottom: calc(65px + env(safe-area-inset-bottom)); left: 0; right: 0; background: var(--bg-main); padding: 12px 15px; border-top: 0.5px solid var(--border); z-index: 1050; display: none; align-items: center; }
+        .input-bar { position: fixed; bottom: calc(65px + env(safe-area-inset-bottom)); left: 0; right: 0; background: var(--bg-main); padding: 12px 15px; border-top: 0.5px solid var(--border); z-index: 1050; display: none; align-items: center; gap: 10px; }
+        .file-btn { font-size: 24px; cursor: pointer; user-select: none; }
         .input-box-wrapper { background: var(--bg-input); border-radius: 22px; display: flex; align-items: center; padding: 0 15px; flex: 1; min-height: 44px; }
         .input-box-wrapper input { background: none; border: none; color: #fff; flex: 1; padding: 10px 0; outline: none; font-size: 16px; }
         
+        /* ボイスメモUI */
+        .voice-section { background: var(--bg-card); margin: 15px; border-radius: 15px; padding: 20px; border: 0.5px solid var(--border); text-align: center; }
+        .record-btn { width: 65px; height: 65px; border-radius: 50%; background: var(--error-red); border: none; color: #fff; font-weight: 900; cursor: pointer; margin-bottom: 10px; transition: transform 0.2s; }
+        .record-btn.recording { animation: pulse 1s infinite; transform: scale(1.1); }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        #audio-list audio { width: 100%; height: 35px; margin-top: 10px; }
+
         /* タブバー */
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(65px + env(safe-area-inset-bottom)); background: var(--bg-card); border-top: 0.5px solid var(--border); display: flex; z-index: 1000; }
         .tab-item { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 11px; font-weight: 700; flex-direction: column; }
@@ -40,7 +47,6 @@
         input.base-input { background: var(--bg-card); border: 0.5px solid var(--border); color: #fff; padding: 15px; border-radius: 12px; width: 100%; box-sizing: border-box; margin-bottom: 15px; font-size: 16px; outline: none; }
         button.action-btn { background: var(--my-blue); color: #fff; border: none; padding: 16px; border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; }
         
-        /* 起動画面 */
         #enable-screen { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; z-index: 10000; }
         #enable-btn { background: none; border: 1px solid #fff; color: #fff; padding: 12px 35px; border-radius: 4px; font-size: 14px; font-weight: 700; letter-spacing: 2px; }
 
@@ -98,15 +104,23 @@
             </div>
 
             <div id="memo-view" class="view">
+                <div class="section-label">VOICE MEMO</div>
+                <div class="voice-section">
+                    <button id="record-btn" class="record-btn" onclick="toggleRecording()">REC</button>
+                    <p id="record-status" style="font-size:12px; color:var(--text-muted);">タップで録音</p>
+                    <div id="audio-list"></div>
+                </div>
+                <div class="section-label">TEXT MEMO</div>
                 <div class="form-padding">
-                    <textarea id="memo-input" style="width:100%; height:450px; background:var(--bg-card); color:#fff; border:0.5px solid var(--border); border-radius:15px; padding:20px; box-sizing:border-box; outline:none; font-family:inherit; font-size:15px;" placeholder="メモ..."></textarea>
+                    <textarea id="memo-input" style="width:100%; height:200px; background:var(--bg-card); color:#fff; border:0.5px solid var(--border); border-radius:15px; padding:20px; box-sizing:border-box; outline:none; font-family:inherit; font-size:15px;" placeholder="メモ..."></textarea>
                 </div>
             </div>
         </div>
 
         <div class="input-bar" id="bottom-bar">
+            <div class="file-btn" onclick="openGigaFile()" title="ファイル送信">📎</div>
             <div class="input-box-wrapper"><input type="text" id="chat-input" placeholder="メッセージ..."></div>
-            <div id="send-btn" onclick="sendMessage()" style="color:var(--my-blue); font-weight:900; cursor:pointer; padding:10px 0 10px 15px;">送信</div>
+            <div id="send-btn" onclick="sendMessage()" style="color:var(--my-blue); font-weight:900; cursor:pointer; padding:10px 0 10px 5px;">送信</div>
         </div>
 
         <div class="tab-bar" id="main-tabs" style="display:none;">
@@ -142,33 +156,21 @@
         let unsubRooms = null;
         let currentRoomId = null;
         let authMode = 'login';
-        let lastMsgTime = 0;
+        let mediaRecorder;
+        let audioChunks = [];
 
-        // --- 門番: 画面遷移の徹底ガード ---
         window.changeTab = async (tab) => {
             const user = auth.currentUser;
-
-            // 1. 未ログインなら、どこを押そうが強制的にWELCOMEへ
-            if (!user) {
-                renderTab('auth');
-                return;
-            }
-
-            // 2. ログイン済みでも名前がなければ設定へ強制誘導
+            if (!user) { renderTab('auth'); return; }
             if (tab !== 'profile' && !userProfile) {
                 const uDoc = await getDoc(doc(db, "users", user.uid));
-                if (!uDoc.exists() || !uDoc.data().name) {
-                    renderTab('profile');
-                    return;
-                }
-                userProfile = uDoc.data();
+                if (uDoc.exists()) userProfile = uDoc.data();
+                if (!userProfile || !userProfile.name) { renderTab('profile'); return; }
             }
-
             renderTab(tab);
         };
 
         function renderTab(tab) {
-            // UIリセット
             document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
             document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
             
@@ -190,7 +192,43 @@
             if (tab === 'chat') loadMessages();
         }
 
-        // --- 起動シーケンス ---
+        // ギガファイル便を開く
+        window.openGigaFile = () => {
+            window.open('https://gigafile.nu/', '_blank');
+        };
+
+        // ボイスメモ
+        window.toggleRecording = async () => {
+            if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg';
+                    mediaRecorder = new MediaRecorder(stream, { mimeType });
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(audioChunks, { type: mimeType });
+                        const url = URL.createObjectURL(blob);
+                        const div = document.createElement('div');
+                        div.style.marginBottom = "15px";
+                        div.innerHTML = `<audio controls src="${url}" style="width:100%"></audio><p style="font-size:10px; color:gray; margin:4px 0 0;">${new Date().toLocaleString()}</p>`;
+                        document.getElementById('audio-list').prepend(div);
+                    };
+
+                    mediaRecorder.start();
+                    document.getElementById('record-btn').classList.add('recording');
+                    document.getElementById('record-status').innerText = "録音中... (タップで停止)";
+                } catch (err) {
+                    alert("マイクの使用を許可してください");
+                }
+            } else {
+                mediaRecorder.stop();
+                document.getElementById('record-btn').classList.remove('recording');
+                document.getElementById('record-status').innerText = "タップで録音";
+            }
+        };
+
         window.startSequence = () => {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             document.getElementById('enable-screen').style.display = 'none';
@@ -204,7 +242,6 @@
             }
         });
 
-        // --- 認証 ---
         window.handleAuth = async () => {
             const email = document.getElementById('auth-email').value;
             const pass = document.getElementById('auth-password').value;
@@ -223,7 +260,6 @@
 
         window.logout = () => signOut(auth).then(() => location.reload());
 
-        // --- プロフィール ---
         window.updateProfile = async () => {
             const name = document.getElementById('p-name').value.trim();
             const emoji = document.getElementById('p-emoji').value.trim() || "👤";
@@ -233,7 +269,6 @@
             window.changeTab('home');
         };
 
-        // --- ルーム/チャット ---
         window.loadMyRooms = () => {
             if(unsubRooms) unsubRooms();
             const q = query(collection(db, "rooms"), where("members", "array-contains", auth.currentUser.uid));
