@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="icon-512.png">
-    <link rel="manifest" href="manifest.json">
     <title>COMMON</title>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
     
@@ -19,42 +17,53 @@
         html, body { height: 100%; height: -webkit-fill-available; margin: 0; padding: 0; overflow: hidden; background: #000; }
         body { font-family: 'Zen Maru Gothic', sans-serif; color: var(--text-main); font-weight: 400; }
         
-        /* 起動演出 */
+        /* 起動・スプラッシュ演出 (維持) */
         #enable-screen { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; z-index: 10000; }
         #enable-btn { background: none; border: 2px solid #fff; color: #fff; padding: 12px 40px; border-radius: 30px; cursor: pointer; font-weight: 700; font-family: 'Zen Maru Gothic'; }
         #loading-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; display: none; z-index: 10000; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #fff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         #loading-fill { width: 0%; height: 6px; background: #fff; transition: width 0.1s; border-radius: 10px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
         #splash-screen { position: fixed; inset: 0; background: #000; display: none; align-items: center; justify-content: center; z-index: 9999; }
         #splash-logo { color: var(--netflix-red); font-size: 50px; font-weight: 900; opacity: 0; letter-spacing: 6px; }
         .animate-logo { animation: intro 3s ease-in-out forwards; }
         @keyframes intro { 0% { opacity: 0; transform: scale(0.8); } 20% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.1); filter: blur(10px); } }
 
-        /* アプリ本体 */
+        /* アプリ構造 */
         #app-body { display: none; height: 100vh; flex-direction: column; background: var(--bg-main); padding-top: env(safe-area-inset-top); }
         .header { height: 50px; background: var(--bg-card); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; font-weight: 900; border-bottom: 1px solid #232428; }
         .main-content { flex: 1; overflow-y: auto; padding-bottom: calc(140px + env(safe-area-inset-bottom)); }
 
-        /* LINE風メッセージ操作性 */
+        /* チャットUI */
         #msg-list { display: flex; flex-direction: column; padding: 15px; gap: 12px; }
-        .msg-bubble { display: flex; align-items: flex-start; gap: 8px; max-width: 80%; }
+        .msg-bubble { display: flex; align-items: flex-start; gap: 8px; max-width: 85%; }
         .msg-bubble.mine { align-self: flex-end; flex-direction: row-reverse; }
         .user-emoji { width: 36px; height: 36px; border-radius: 50%; background: #4e5058; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-        .msg-content { padding: 10px 14px; border-radius: 20px; font-size: 15px; line-height: 1.5; }
+        .msg-content { padding: 10px 14px; border-radius: 20px; font-size: 15px; line-height: 1.5; word-break: break-all; position: relative; }
         .mine .msg-content { background: var(--my-blue); color: #fff; border-top-right-radius: 2px; }
         .other .msg-content { background: var(--bg-bubble-other); color: var(--text-main); border-top-left-radius: 2px; }
-        audio { height: 35px; width: 180px; filter: invert(0.9); margin-top: 5px; }
 
-        /* 入力エリア */
+        /* カスタムボイスプレイヤー UI */
+        .voice-player { display: flex; align-items: center; gap: 10px; min-width: 200px; padding: 5px 0; }
+        .play-btn { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; padding: 0; width: 24px; }
+        .seek-bar { flex: 1; -webkit-appearance: none; background: rgba(255,255,255,0.2); height: 4px; border-radius: 2px; outline: none; }
+        .seek-bar::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: #fff; border-radius: 50%; cursor: pointer; }
+        .duration { font-size: 10px; color: rgba(255,255,255,0.7); min-width: 30px; }
+
+        /* 入力バー・録音演出 */
         .input-bar { position: fixed; bottom: calc(60px + env(safe-area-inset-bottom)); left: 0; right: 0; background: var(--bg-main); padding: 10px 15px; border-top: 1px solid #232428; }
         .input-box { background: var(--bg-card); border-radius: 25px; flex: 1; display: flex; align-items: center; padding: 0 15px; }
         .input-box input { background: none; border: none; color: #fff; flex: 1; padding: 12px 0; outline: none; font-size: 16px; font-family: 'Zen Maru Gothic'; }
-
-        /* 録音演出 */
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         .recording-text { color: #ff4444; font-weight: 700; animation: blink 1s infinite; }
 
-        /* ナビゲーション */
+        /* モーダル (UI軟化) */
+        #custom-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 11000; padding: 20px; }
+        .modal-card { background: var(--bg-card); width: 100%; max-width: 300px; border-radius: 25px; padding: 25px; text-align: center; }
+        .btn-sub { background: #4e5058; color: #fff; border: none; padding: 12px; border-radius: 12px; flex: 1; font-weight: 700; cursor: pointer; }
+        .btn-danger { background: #f23f43; color: #fff; border: none; padding: 12px; border-radius: 12px; flex: 1; font-weight: 700; cursor: pointer; }
+
+        /* タブバー */
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(60px + env(safe-area-inset-bottom)); background: var(--bg-card); border-top: 1px solid #232428; display: flex; padding-top: 8px; }
         .tab-item { text-align: center; font-size: 10px; color: var(--text-muted); flex: 1; cursor: pointer; }
         .tab-item.active { color: #fff; }
@@ -62,11 +71,8 @@
 
         .view { display: none; padding: 20px; }
         .card { background: var(--bg-card); padding: 20px; border-radius: 20px; margin-bottom: 15px; }
-        button { background: var(--my-blue); color: #fff; border: none; padding: 14px; border-radius: 15px; font-weight: 700; width: 100%; font-family: 'Zen Maru Gothic'; }
-        input, textarea { background: #1e1f22; border: none; color: #fff; padding: 12px; border-radius: 12px; width: 100%; box-sizing: border-box; margin: 5px 0; font-family: 'Zen Maru Gothic'; }
-        .auth-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
-        .auth-tab { flex: 1; text-align: center; padding: 10px; border-radius: 10px; background: #1e1f22; color: var(--text-muted); cursor: pointer; }
-        .auth-tab.active { background: var(--my-blue); color: #fff; }
+        button { background: var(--my-blue); color: #fff; border: none; padding: 14px; border-radius: 15px; font-weight: 700; width: 100%; font-family: 'Zen Maru Gothic'; cursor: pointer; }
+        input, textarea { background: #1e1f22; border: none; color: #fff; padding: 12px; border-radius: 12px; width: 100%; box-sizing: border-box; margin: 5px 0; font-family: 'Zen Maru Gothic'; outline: none; }
     </style>
 </head>
 <body>
@@ -74,6 +80,17 @@
     <div id="enable-screen"><button id="enable-btn" onclick="startSequence()">ENABLE START</button></div>
     <div id="loading-container"><div class="spinner"></div><div style="width:180px; background:#1e1f22; border-radius:10px; margin:auto;"><div id="loading-fill"></div></div></div>
     <div id="splash-screen"><div id="splash-logo">COMMON</div></div>
+
+    <div id="custom-modal">
+        <div class="modal-card">
+            <div id="modal-title" style="font-weight:900; margin-bottom:10px;"></div>
+            <div id="modal-desc" style="font-size:14px; color:var(--text-muted); margin-bottom:20px;"></div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-sub" onclick="closeModal()">キャンセル</button>
+                <button id="modal-confirm-btn" class="btn-danger">実行</button>
+            </div>
+        </div>
+    </div>
 
     <div id="app-body">
         <div class="header">
@@ -85,9 +102,9 @@
         <div class="main-content" id="scroll-area">
             <div id="login-view" class="view">
                 <div class="card">
-                    <div class="auth-tabs">
-                        <div id="tab-login-btn" class="auth-tab active" onclick="switchAuth('login')">ログイン</div>
-                        <div id="tab-signup-btn" class="auth-tab" onclick="switchAuth('signup')">新規登録</div>
+                    <div style="display:flex; gap:10px; margin-bottom:15px;">
+                        <div id="tab-login-btn" style="flex:1; text-align:center; padding:10px; border-radius:10px; background:var(--my-blue); cursor:pointer;" onclick="switchAuth('login')">ログイン</div>
+                        <div id="tab-signup-btn" style="flex:1; text-align:center; padding:10px; border-radius:10px; background:#1e1f22; cursor:pointer;" onclick="switchAuth('signup')">新規登録</div>
                     </div>
                     <input type="email" id="auth-email" placeholder="メールアドレス">
                     <input type="password" id="auth-password" placeholder="パスワード">
@@ -97,23 +114,35 @@
 
             <div id="home-view" class="view">
                 <div class="card">
-                    <h3>ルームに参加</h3>
+                    <h3 style="margin:0 0 10px 0;">ルームに参加</h3>
                     <input type="text" id="join-id" placeholder="ルームID">
                     <input type="password" id="join-pass" placeholder="6桁パスワード" maxlength="6">
                     <button onclick="joinRoom()" style="margin-top:10px;">参加</button>
                 </div>
                 <div class="card">
-                    <h3>マイルーム</h3>
+                    <h3 style="margin:0 0 10px 0;">参加中のルーム</h3>
                     <div id="room-list"></div>
-                    <button onclick="createRoom()" style="margin-top:15px; background:#248046;">＋ 新規作成</button>
+                    <button onclick="createRoom()" style="margin-top:15px; background:#248046;">＋ ルーム作成</button>
                 </div>
             </div>
 
             <div id="chat-view" class="view" style="padding:0;"><div id="msg-list"></div></div>
+            
             <div id="profile-view" class="view">
-                <div class="card"><h3>プロフィール設定</h3><input type="text" id="p-emoji" placeholder="絵文字"><input type="text" id="p-name" placeholder="名前"><button onclick="updateProfile()" style="margin-top:15px;">保存</button><button onclick="logout()" style="background:#f23f43; margin-top:20px;">ログアウト</button></div>
+                <div class="card">
+                    <h3 style="margin:0 0 10px 0;">プロフィール</h3>
+                    <input type="text" id="p-emoji" placeholder="絵文字">
+                    <input type="text" id="p-name" placeholder="名前">
+                    <button onclick="updateProfile()" style="margin-top:15px;">保存</button>
+                    <button onclick="logout()" style="background:#f23f43; margin-top:20px;">ログアウト</button>
+                </div>
             </div>
-            <div id="memo-view" class="view" style="height:100%;"><div class="card" style="height:350px;"><textarea id="memo-input" style="height:100%; resize:none; background:none;" placeholder="自動保存メモ..."></textarea></div></div>
+            
+            <div id="memo-view" class="view" style="height:100%;">
+                <div class="card" style="height:350px;">
+                    <textarea id="memo-input" style="height:100%; resize:none; background:none;" placeholder="自動保存メモ..."></textarea>
+                </div>
+            </div>
         </div>
 
         <div class="input-bar" id="bottom-bar" style="display:none;">
@@ -124,9 +153,9 @@
                 <div onclick="sendMessage()" style="font-size:22px; cursor:pointer;">🚀</div>
             </div>
             <div id="recording-input" style="display: none; width: 100%; gap: 20px; align-items: center; justify-content: space-between;">
-                <div onclick="cancelRecording()" style="font-size:16px; cursor:pointer; color:#949ba4;">🗑️ 却下</div>
+                <div onclick="cancelRecording()" style="font-size:16px; cursor:pointer; color:var(--text-muted);">🗑️ 却下</div>
                 <div class="recording-text">● 録音中...</div>
-                <div onclick="finishRecording()" style="font-size:18px; cursor:pointer; color:#007AFF; font-weight:bold;">✅ 送信</div>
+                <div onclick="finishRecording()" style="font-size:18px; cursor:pointer; color:var(--my-blue); font-weight:bold;">✅ 送信</div>
             </div>
         </div>
 
@@ -148,113 +177,158 @@
         let userProfile = null, audioCtx = null, unsubMsg = null, authMode = 'login', currentRoomId = null;
         let mediaRecorder = null, audioChunks = [], micStream = null, lastMsgTime = 0;
 
-        // 効果音生成ロジック
-        const initAudio = () => { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); };
-        const playSound = (freq, type, dur, vol) => {
+        // 【全機種対応】MIMEタイプ取得
+        const getSupportedMimeType = () => {
+            const types = ["audio/mp4", "audio/aac", "audio/webm;codecs=opus", "audio/webm"];
+            for (let t of types) { if (MediaRecorder.isTypeSupported(t)) return t; }
+            return "";
+        };
+
+        // 【ﾎﾟｯ音】効果音
+        const playPopSound = (isSend) => {
             if(!audioCtx) return;
             const now = audioCtx.currentTime;
-            const g = audioCtx.createGain();
-            g.gain.setValueAtTime(0, now);
-            g.gain.linearRampToValueAtTime(vol, now + 0.01);
-            g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-            const o = audioCtx.createOscillator();
-            o.type = type; o.frequency.setValueAtTime(freq, now);
-            o.connect(g); g.connect(audioCtx.destination);
-            o.start(now); o.stop(now + dur);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.setValueAtTime(isSend ? 880 : 660, now);
+            osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.1, now + 0.01);
+            gain.gain.linearRampToValueAtTime(0, now + 0.1);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(now + 0.1);
         };
-        const playIntroSound = () => {
-            const now = audioCtx.currentTime;
-            const g = audioCtx.createGain(); g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.4, now + 0.6); g.gain.linearRampToValueAtTime(0, now + 3.0);
-            const osc = audioCtx.createOscillator(); osc.type = 'sine'; osc.frequency.setValueAtTime(60, now); osc.frequency.exponentialRampToValueAtTime(32, now + 3.0);
-            osc.connect(g); g.connect(audioCtx.destination); osc.start(now); osc.stop(now + 3.0);
-        };
-        const playSendSound = () => playSound(880, 'sine', 0.2, 0.2); // 送信音 (高め)
-        const playReceiveSound = () => { playSound(440, 'sine', 0.1, 0.1); setTimeout(() => playSound(660, 'sine', 0.2, 0.1), 50); }; // 受信音 (2音)
 
+        // 独自モーダル
+        window.openModal = (title, desc, confirmLabel, onConfirm) => {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerText = desc;
+            const btn = document.getElementById('modal-confirm-btn');
+            btn.innerText = confirmLabel; btn.onclick = () => { onConfirm(); closeModal(); };
+            document.getElementById('custom-modal').style.display = 'flex';
+        };
+        window.closeModal = () => document.getElementById('custom-modal').style.display = 'none';
+
+        // 起動・スプラッシュ
         window.startSequence = () => {
-            initAudio(); document.getElementById('enable-screen').style.display = 'none';
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            document.getElementById('enable-screen').style.display = 'none';
             document.getElementById('loading-container').style.display = 'block';
             let w = 0; const iv = setInterval(() => {
                 w += 5; document.getElementById('loading-fill').style.width = w + '%';
                 if(w >= 100) { clearInterval(iv); document.getElementById('loading-container').style.display = 'none'; startSplash(); }
             }, 30);
         };
-
         const startSplash = () => {
             const sp = document.getElementById('splash-screen'); sp.style.display = 'flex';
             document.getElementById('splash-logo').classList.add('animate-logo');
-            playIntroSound();
+            const now = audioCtx.currentTime;
+            const g = audioCtx.createGain(); g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.3, now + 0.5); g.gain.linearRampToValueAtTime(0, now + 2.5);
+            const o = audioCtx.createOscillator(); o.frequency.setValueAtTime(60, now); o.frequency.exponentialRampToValueAtTime(30, now + 2.5);
+            o.connect(g); g.connect(audioCtx.destination); o.start(now); o.stop(now + 3.0);
             setTimeout(() => { sp.style.display = 'none'; document.getElementById('app-body').style.display = 'flex'; checkUser(); }, 3000);
         };
 
-        window.switchAuth = (m) => { authMode = m; document.getElementById('tab-login-btn').classList.toggle('active', m==='login'); document.getElementById('tab-signup-btn').classList.toggle('active', m==='signup'); };
+        window.switchAuth = (m) => {
+            authMode = m;
+            document.getElementById('tab-login-btn').style.background = (m==='login' ? 'var(--my-blue)' : '#1e1f22');
+            document.getElementById('tab-signup-btn').style.background = (m==='signup' ? 'var(--my-blue)' : '#1e1f22');
+        };
         window.handleAuth = async () => {
             const e = document.getElementById('auth-email').value, p = document.getElementById('auth-password').value;
-            try { if(authMode==='login') await signInWithEmailAndPassword(auth, e, p); else await createUserWithEmailAndPassword(auth, e, p); } catch(e) { alert(e.message); }
+            try { if(authMode==='login') await signInWithEmailAndPassword(auth, e, p); else await createUserWithEmailAndPassword(auth, e, p); } catch(err) { alert(err.message); }
         };
-
         const checkUser = () => {
             onAuthStateChanged(auth, async user => {
                 if (user) {
                     const uDoc = await getDoc(doc(db, "users", user.uid));
-                    if (uDoc.exists()) { userProfile = uDoc.data(); changeTab('home'); loadRooms(); }
-                    else showView('profile-view');
-                } else showView('login-view');
+                    if (uDoc.exists()) { 
+                        userProfile = uDoc.data(); 
+                        document.getElementById('p-name').value = userProfile.name || "";
+                        document.getElementById('p-emoji').value = userProfile.emoji || "";
+                        changeTab('home'); loadRooms(); 
+                    } else { showView('profile-view'); }
+                } else { showView('login-view'); }
             });
         };
 
-        window.createRoom = async () => {
+        // ルーム機能
+        window.createRoom = () => {
             const n = prompt("ルーム名"); if(!n) return;
-            const p = prompt("6桁の数字パスワードを設定", "000000"); if(!p || p.length !== 6) return alert("6桁必須");
+            const p = prompt("6桁パスワード", "000000"); if(!p || p.length !== 6) return alert("6桁必須");
             const rid = Math.random().toString(36).substring(2, 8).toUpperCase();
-            await setDoc(doc(db, "rooms", rid), { name: n, password: p, host: auth.currentUser.uid, members: [auth.currentUser.uid], createdAt: Date.now() });
-            alert("ID: " + rid); changeTab(rid);
+            setDoc(doc(db, "rooms", rid), { name: n, password: p, host: auth.currentUser.uid, members: [auth.currentUser.uid], createdAt: Date.now() }).then(() => changeTab(rid));
         };
-
         window.joinRoom = async () => {
-            const rid = document.getElementById('join-id').value.toUpperCase().trim();
-            const pass = document.getElementById('join-pass').value.trim();
+            const rid = document.getElementById('join-id').value.toUpperCase().trim(), pass = document.getElementById('join-pass').value.trim();
             const rDoc = await getDoc(doc(db, "rooms", rid));
             if(rDoc.exists() && rDoc.data().password === pass) {
                 await updateDoc(doc(db, "rooms", rid), { members: arrayUnion(auth.currentUser.uid) });
                 changeTab(rid);
-            } else alert("不適合");
+            } else { alert("失敗"); }
         };
-
         window.showRoomMenu = async () => {
             if(!currentRoomId) return;
             const rDoc = await getDoc(doc(db, "rooms", currentRoomId));
-            const data = rDoc.data();
-            const isHost = data.host === auth.currentUser.uid;
-            let msg = `ID: ${currentRoomId}\nPASS: ${data.password}\n\n`;
-            if(isHost) { if(confirm(msg + "削除？")) { await deleteDoc(doc(db, "rooms", currentRoomId)); changeTab('home'); } }
-            else { if(confirm(msg + "退出？")) { await updateDoc(doc(db, "rooms", currentRoomId), { members: arrayRemove(auth.currentUser.uid) }); changeTab('home'); } }
+            const data = rDoc.data(), isHost = data.host === auth.currentUser.uid;
+            if(isHost) {
+                openModal("ルーム削除", "このルームを完全に削除しますか？", "削除", async () => { await deleteDoc(doc(db, "rooms", currentRoomId)); changeTab('home'); });
+            } else {
+                openModal("ルーム退出", "このルームから退出しますか？", "退出", async () => { await updateDoc(doc(db, "rooms", currentRoomId), { members: arrayRemove(auth.currentUser.uid) }); changeTab('home'); });
+            }
         };
 
+        // 録音処理
         window.startRecording = async () => {
             try {
                 micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(micStream); audioChunks = [];
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.start();
+                const mimeType = getSupportedMimeType();
+                mediaRecorder = new MediaRecorder(micStream, mimeType ? { mimeType } : {});
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => { if(e.data.size > 0) audioChunks.push(e.data); };
+                mediaRecorder.start(1000); 
                 document.getElementById('normal-input').style.display = 'none';
                 document.getElementById('recording-input').style.display = 'flex';
-            } catch (e) { alert("許可必須"); }
+            } catch (e) { alert("マイク許可なし"); }
         };
         const stopMic = () => { if(micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; } document.getElementById('normal-input').style.display = 'flex'; document.getElementById('recording-input').style.display = 'none'; };
         window.cancelRecording = () => { if(mediaRecorder) mediaRecorder.stop(); stopMic(); };
         window.finishRecording = () => {
             if(!mediaRecorder) return;
             mediaRecorder.onstop = async () => {
-                const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
                 const reader = new FileReader(); reader.readAsDataURL(blob);
                 reader.onloadend = async () => {
                     await addDoc(collection(db, `rooms/${currentRoomId}/messages`), { uid: auth.currentUser.uid, name: userProfile.name, emoji: userProfile.emoji, voiceData: reader.result, createdAt: Date.now() });
-                    playSendSound();
+                    playPopSound(true);
                 };
                 stopMic();
             };
             mediaRecorder.stop();
+        };
+
+        // メッセージ・プレイヤー描画
+        window.initVoicePlayer = (id, dataUrl) => {
+            const audio = new Audio(dataUrl);
+            const playBtn = document.getElementById(`btn-${id}`);
+            const seek = document.getElementById(`seek-${id}`);
+            const durText = document.getElementById(`dur-${id}`);
+            
+            audio.onloadedmetadata = () => { seek.max = Math.floor(audio.duration); };
+            audio.ontimeupdate = () => { seek.value = Math.floor(audio.currentTime); };
+            audio.onended = () => { playBtn.innerText = "▶️"; seek.value = 0; };
+            
+            window[`playVoice_${id}`] = () => {
+                if(audio.paused) { audio.play(); playBtn.innerText = "⏸️"; }
+                else { audio.pause(); playBtn.innerText = "▶️"; }
+            };
+            window[`seekVoice_${id}`] = (val) => { audio.currentTime = val; };
+        };
+
+        window.sendMessage = async () => { 
+            const input = document.getElementById('chat-input'); if(!input.value.trim() || !currentRoomId) return; 
+            await addDoc(collection(db, `rooms/${currentRoomId}/messages`), { uid: auth.currentUser.uid, name: userProfile.name, emoji: userProfile.emoji, text: input.value.trim(), createdAt: Date.now() }); 
+            input.value = ""; playPopSound(true); 
         };
 
         window.changeTab = (t) => {
@@ -271,32 +345,35 @@
         function loadRooms() { onSnapshot(query(collection(db, "rooms"), where("members", "array-contains", auth.currentUser.uid)), s => { const list = document.getElementById('room-list'); list.innerHTML = ""; s.forEach(d => { list.innerHTML += `<div class="card" onclick="changeTab('${d.id}')" style="cursor:pointer; border-left: 4px solid var(--my-blue);"># ${d.data().name}</div>`; }); }); }
         async function loadMemo() { const m = await getDoc(doc(db, "memos", auth.currentUser.uid)); if(m.exists()) document.getElementById('memo-input').value = m.data().text; }
         document.getElementById('memo-input').oninput = async (e) => { if(auth.currentUser) await setDoc(doc(db, "memos", auth.currentUser.uid), { text: e.target.value }); };
-        
-        window.sendMessage = async () => { 
-            const input = document.getElementById('chat-input'); 
-            if(!input.value.trim() || !currentRoomId) return; 
-            await addDoc(collection(db, `rooms/${currentRoomId}/messages`), { uid: auth.currentUser.uid, name: userProfile.name, emoji: userProfile.emoji, text: input.value.trim(), createdAt: Date.now() }); 
-            input.value = ""; 
-            playSendSound(); 
-        };
 
         function loadMessages(rid) { 
             if(unsubMsg) unsubMsg(); 
             lastMsgTime = Date.now();
             unsubMsg = onSnapshot(query(collection(db, `rooms/${rid}/messages`), orderBy("createdAt", "asc")), s => { 
-                const list = document.getElementById('msg-list'); 
-                list.innerHTML = ""; 
+                const list = document.getElementById('msg-list'); list.innerHTML = ""; 
                 s.forEach(d => { 
                     const data = d.data(), isMine = data.uid === auth.currentUser.uid; 
-                    if (!isMine && data.createdAt > lastMsgTime) { playReceiveSound(); lastMsgTime = data.createdAt; }
-                    let content = data.text || `<audio controls src="${data.voiceData}"></audio>`; 
+                    if (!isMine && data.createdAt > lastMsgTime) { playPopSound(false); lastMsgTime = data.createdAt; }
+                    let content = data.text;
+                    if(data.voiceData) {
+                        const vid = d.id;
+                        content = `<div class="voice-player">
+                            <button id="btn-${vid}" class="play-btn" onclick="playVoice_${vid}()">▶️</button>
+                            <input id="seek-${vid}" type="range" class="seek-bar" value="0" step="1" oninput="seekVoice_${vid}(this.value)">
+                        </div>`;
+                        setTimeout(() => initVoicePlayer(vid, data.voiceData), 50);
+                    }
                     list.innerHTML += `<div class="msg-bubble ${isMine ? 'mine' : 'other'}"><div class="user-emoji">${data.emoji || '👤'}</div><div class="msg-content">${content}</div></div>`; 
                 }); 
                 document.getElementById('scroll-area').scrollTop = document.getElementById('scroll-area').scrollHeight; 
             }); 
         }
         window.logout = () => signOut(auth).then(() => location.reload());
-        window.updateProfile = async () => { const n = document.getElementById('p-name').value, e = document.getElementById('p-emoji').value; await setDoc(doc(db, "users", auth.currentUser.uid), {name:n, emoji:e}, {merge:true}); changeTab('home'); };
+        window.updateProfile = async () => { 
+            const n = document.getElementById('p-name').value, e = document.getElementById('p-emoji').value; 
+            await setDoc(doc(db, "users", auth.currentUser.uid), {name:n, emoji:e}, {merge:true}); 
+            userProfile = {name:n, emoji:e}; changeTab('home'); 
+        };
     </script>
 </body>
 </html>
