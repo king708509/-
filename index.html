@@ -2,18 +2,26 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>COMMON - Hybrid Full</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="COMMON">
+    
+    <title>COMMON</title>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
+    
     <style>
         :root { 
             --bg-dark: #313338; --bg-card: #2b2d31; --bg-bubble-other: #383a40;
             --text-main: #dbdee1; --text-muted: #949ba4; --discord-blue: #5865f2;
             --netflix-red: #E50914; 
         }
-        body { font-family: 'Zen Maru Gothic', sans-serif; margin: 0; background: var(--bg-dark); color: var(--text-main); overflow: hidden; }
         
-        /* 1. 演出（維持） */
+        /* 画面全体の高さ調整（ブラウザのバー対策） */
+        html, body { height: 100%; height: -webkit-fill-available; margin: 0; padding: 0; overflow: hidden; background: #000; }
+        body { font-family: 'Zen Maru Gothic', sans-serif; color: var(--text-main); }
+        
+        /* 1. 演出系 */
         #enable-screen { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; z-index: 10000; }
         #enable-btn { background: none; border: 2px solid #fff; color: #fff; padding: 12px 40px; border-radius: 30px; cursor: pointer; letter-spacing: 2px; font-weight: 700; }
         #loading-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; display: none; z-index: 10000; }
@@ -26,11 +34,20 @@
         .animate-logo { animation: intro 3s ease-in-out forwards; }
         @keyframes intro { 0% { opacity: 0; transform: scale(0.8); filter: blur(10px); } 20% { opacity: 1; transform: scale(1); filter: blur(0px); } 80% { opacity: 1; } 100% { opacity: 0; transform: scale(1.1); filter: blur(20px); } }
 
-        /* 2. UIレイアウト（戻した配置） */
-        #app-body { display: none; height: 100vh; flex-direction: column; }
-        .header { height: 55px; background: var(--bg-card); display: flex; align-items: center; justify-content: center; font-weight: 900; border-bottom: 1px solid #232428; }
-        .main-content { flex: 1; overflow-y: auto; padding-bottom: 140px; }
+        /* 2. アプリ本体レイアウト */
+        #app-body { 
+            display: none; height: 100vh; flex-direction: column; 
+            background: var(--bg-dark);
+            padding-top: env(safe-area-inset-top); /* ノッチ回避 */
+        }
+        .header { height: 50px; background: var(--bg-card); display: flex; align-items: center; justify-content: center; font-weight: 900; border-bottom: 1px solid #232428; }
         
+        .main-content { 
+            flex: 1; overflow-y: auto; 
+            padding-bottom: calc(130px + env(safe-area-inset-bottom)); /* 下部の余白確保 */
+        }
+        
+        /* チャット吹き出し */
         #msg-list { display: flex; flex-direction: column; padding: 15px; gap: 15px; }
         .msg-bubble { display: flex; align-items: flex-end; gap: 8px; max-width: 85%; }
         .msg-bubble.mine { align-self: flex-end; flex-direction: row-reverse; }
@@ -38,17 +55,33 @@
         .msg-content { padding: 10px 14px; border-radius: 18px; font-size: 15px; line-height: 1.4; word-break: break-all; }
         .mine .msg-content { background: var(--discord-blue); color: #fff; border-bottom-right-radius: 4px; }
         .other .msg-content { background: var(--bg-bubble-other); color: var(--text-main); border-bottom-left-radius: 4px; }
-        
-        audio { height: 30px; width: 180px; margin-top: 5px; filter: invert(0.9); }
+        audio { height: 35px; width: 180px; margin-top: 5px; filter: invert(0.9); }
 
-        .input-bar { position: fixed; bottom: 65px; left: 0; right: 0; background: var(--bg-dark); padding: 10px 15px; display: flex; gap: 12px; align-items: center; border-top: 1px solid #232428; }
+        /* 入力バー（タブの上に固定） */
+        .input-bar { 
+            position: fixed; 
+            bottom: calc(60px + env(safe-area-inset-bottom)); 
+            left: 0; right: 0; 
+            background: var(--bg-dark); 
+            padding: 10px 15px; display: flex; gap: 12px; align-items: center; 
+            border-top: 1px solid #232428; 
+            z-index: 100;
+        }
         .input-box { background: var(--bg-card); border-radius: 25px; flex: 1; display: flex; align-items: center; padding: 0 15px; }
-        .input-box input { background: none; border: none; color: #fff; flex: 1; padding: 12px 0; outline: none; font-family: 'Zen Maru Gothic', sans-serif; }
+        .input-box input { background: none; border: none; color: #fff; flex: 1; padding: 12px 0; outline: none; font-family: 'Zen Maru Gothic', sans-serif; font-size: 16px; }
         
-        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--bg-card); border-top: 1px solid #232428; display: flex; justify-content: space-around; align-items: center; }
+        /* 下部タブバー（ホームバー対応） */
+        .tab-bar { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            height: calc(60px + env(safe-area-inset-bottom)); 
+            background: var(--bg-card); border-top: 1px solid #232428; 
+            display: flex; justify-content: space-around; align-items: flex-start;
+            padding-top: 8px;
+            z-index: 100;
+        }
         .tab-item { text-align: center; font-size: 10px; color: var(--text-muted); flex: 1; }
         .tab-item.active { color: #fff; }
-        .tab-icon { font-size: 22px; display: block; }
+        .tab-icon { font-size: 22px; display: block; margin-bottom: 2px; }
 
         .view { display: none; padding: 20px; }
         .card { background: var(--bg-card); padding: 20px; border-radius: 15px; margin-bottom: 15px; }
@@ -64,17 +97,30 @@
 
     <div id="app-body">
         <div class="header" id="header-title">COMMON</div>
-        <div class="main-content">
+        
+        <div class="main-content" id="scroll-area">
             <div id="login-view" class="view"><div class="card"><h3>ログイン</h3><input type="email" id="email" placeholder="メール"><input type="password" id="password" placeholder="パスワード"><button onclick="login()">ログイン</button></div></div>
+            
             <div id="home-view" class="view"><div class="card"><h3>ROOMS</h3><div id="room-list"></div><button onclick="createRoom()" style="margin-top:15px;">＋ 新ルーム作成</button></div></div>
-            <div id="chat-view" class="view" style="padding:0;"><div id="msg-list"></div><div class="input-bar"><a href="https://gigafile.nu/" target="_blank" style="text-decoration:none; font-size:22px;">📁</a><div id="mic-btn" style="cursor:pointer; font-size:22px; transition: 0.2s;" onclick="toggleRecording()">🎤</div><div class="input-box"><input type="text" id="chat-input" placeholder="メッセージ..."></div><div onclick="sendMessage()" style="font-size:22px; cursor:pointer;">🚀</div></div></div>
+            
+            <div id="chat-view" class="view" style="padding:0;"><div id="msg-list"></div></div>
+            
             <div id="profile-view" class="view"><div class="card"><h2>設定</h2><input type="text" id="p-emoji" placeholder="絵文字"><input type="text" id="p-name" placeholder="お名前"><button onclick="updateProfile()">保存</button><button onclick="logout()" style="background:#f23f43; margin-top:20px;">ログアウト</button></div></div>
-            <div id="memo-view" class="view" style="height:100%;"><div class="card" style="height:calc(100% - 60px);"><textarea id="memo-input" style="height:100%; width:100%; resize:none; background:none; border:none; color:#fff;" placeholder="自動保存メモ..."></textarea></div></div>
+            
+            <div id="memo-view" class="view" style="height:100%;"><div class="card" style="height:300px;"><textarea id="memo-input" style="height:100%; width:100%; resize:none; background:none; border:none; color:#fff;" placeholder="自動保存メモ..."></textarea></div></div>
         </div>
+
+        <div class="input-bar" id="bottom-input-bar" style="display:none;">
+            <a href="https://gigafile.nu/" target="_blank" style="text-decoration:none; font-size:22px;">📁</a>
+            <div id="mic-btn" style="cursor:pointer; font-size:22px;" onclick="toggleRecording()">🎤</div>
+            <div class="input-box"><input type="text" id="chat-input" placeholder="メッセージ..."></div>
+            <div onclick="sendMessage()" style="font-size:22px; cursor:pointer;">🚀</div>
+        </div>
+
         <div class="tab-bar">
-            <div class="tab-item" onclick="changeTab('home')"><span class="tab-icon">🏠</span>ホーム</div>
-            <div class="tab-item" onclick="changeTab('memo')"><span class="tab-icon">📝</span>メモ</div>
-            <div class="tab-item" onclick="changeTab('profile')"><span class="tab-icon">👤</span>設定</div>
+            <div class="tab-item active" id="tab-home" onclick="changeTab('home')"><span class="tab-icon">🏠</span>ホーム</div>
+            <div class="tab-item" id="tab-memo" onclick="changeTab('memo')"><span class="tab-icon">📝</span>メモ</div>
+            <div class="tab-item" id="tab-profile" onclick="changeTab('profile')"><span class="tab-icon">👤</span>設定</div>
         </div>
     </div>
 
@@ -87,8 +133,8 @@
         const app = initializeApp(config), auth = getAuth(app), db = getFirestore(app);
         
         let userProfile = null, audioCtx = null, unsubMsg = null, mediaRecorder = null, audioChunks = [];
+        let hasSeenIntro = false;
 
-        // 演出 & 音響 (削りなし)
         const initAudio = () => { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); };
         const playIntroSound = () => {
             const now = audioCtx.currentTime;
@@ -101,7 +147,7 @@
             initAudio(); document.getElementById('enable-screen').style.display = 'none';
             document.getElementById('loading-container').style.display = 'block';
             let w = 0; const iv = setInterval(() => {
-                w += 4; document.getElementById('loading-bar').style.width = w + '%';
+                w += 5; document.getElementById('loading-bar').style.width = w + '%';
                 if(w >= 100) { clearInterval(iv); document.getElementById('loading-container').style.display = 'none'; startSplash(); }
             }, 30);
         };
@@ -110,35 +156,25 @@
             const sp = document.getElementById('splash-screen'); sp.style.display = 'flex';
             document.getElementById('splash-logo').classList.add('animate-logo');
             playIntroSound();
-            setTimeout(() => { sp.style.display = 'none'; document.getElementById('app-body').style.display = 'flex'; checkUser(); }, 3000);
+            setTimeout(() => { sp.style.display = 'none'; document.getElementById('app-body').style.display = 'flex'; hasSeenIntro = true; checkUser(); }, 3000);
         };
 
-        // ボイスメッセージ機能 (削りなし・復活)
         window.toggleRecording = async () => {
             const btn = document.getElementById('mic-btn');
             if (!mediaRecorder || mediaRecorder.state === "inactive") {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
+                mediaRecorder = new MediaRecorder(stream); audioChunks = [];
                 mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                 mediaRecorder.onstop = async () => {
                     const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const reader = new FileReader();
-                    reader.readAsDataURL(blob);
+                    const reader = new FileReader(); reader.readAsDataURL(blob);
                     reader.onloadend = async () => {
                         const rid = location.hash.substring(1);
-                        await addDoc(collection(db, `rooms/${rid}/messages`), {
-                            uid: auth.currentUser.uid, name: userProfile.name, emoji: userProfile.emoji,
-                            voiceData: reader.result, createdAt: Date.now()
-                        });
+                        await addDoc(collection(db, `rooms/${rid}/messages`), { uid: auth.currentUser.uid, name: userProfile.name, emoji: userProfile.emoji, voiceData: reader.result, createdAt: Date.now() });
                     };
                 };
-                mediaRecorder.start();
-                btn.style.color = "red";
-            } else {
-                mediaRecorder.stop();
-                btn.style.color = "var(--text-muted)";
-            }
+                mediaRecorder.start(); btn.style.color = "red";
+            } else { mediaRecorder.stop(); btn.style.color = "inherit"; }
         };
 
         const checkUser = () => {
@@ -152,10 +188,13 @@
         };
 
         window.changeTab = (t) => {
-            if(t === 'home') showView('home-view');
-            else if(t === 'memo') { showView('memo-view'); loadMemo(); }
-            else if(t === 'profile') showView('profile-view');
-            else { showView('chat-view'); loadMessages(t); }
+            document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('bottom-input-bar').style.display = 'none';
+            
+            if(t === 'home') { showView('home-view'); document.getElementById('tab-home').classList.add('active'); }
+            else if(t === 'memo') { showView('memo-view'); loadMemo(); document.getElementById('tab-memo').classList.add('active'); }
+            else if(t === 'profile') { showView('profile-view'); document.getElementById('tab-profile').classList.add('active'); }
+            else { showView('chat-view'); loadMessages(t); document.getElementById('bottom-input-bar').style.display = 'flex'; }
         };
 
         const showView = (id) => { document.querySelectorAll('.view').forEach(v => v.style.display = 'none'); document.getElementById(id).style.display = 'block'; };
@@ -178,8 +217,7 @@
         };
 
         function loadMessages(rid) {
-            location.hash = rid;
-            if(unsubMsg) unsubMsg();
+            location.hash = rid; if(unsubMsg) unsubMsg();
             unsubMsg = onSnapshot(query(collection(db, `rooms/${rid}/messages`), orderBy("createdAt", "asc")), s => {
                 const list = document.getElementById('msg-list'); list.innerHTML = "";
                 s.forEach(d => {
@@ -188,7 +226,7 @@
                     if(data.voiceData) content = `<audio controls src="${data.voiceData}"></audio>`;
                     list.innerHTML += `<div class="msg-bubble ${isMine ? 'mine' : 'other'}"><div class="user-emoji">${data.emoji}</div><div class="msg-content">${content}</div></div>`;
                 });
-                document.querySelector('.main-content').scrollTop = document.querySelector('.main-content').scrollHeight;
+                document.getElementById('scroll-area').scrollTop = document.getElementById('scroll-area').scrollHeight;
             });
         }
 
