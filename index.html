@@ -15,32 +15,35 @@
         #sidebar.open { left: 0; }
         .nav-item { padding: 18px; border-bottom: 1px solid #f0f0f0; cursor: pointer; font-weight: bold; }
 
-        /* ヘッダー */
         .header { position: fixed; top: 0; left: 0; right: 0; height: 55px; background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #ddd; z-index: 900; }
         .main-content { transition: 0.3s; padding: 15px; padding-top: 70px; min-height: 100vh; box-sizing: border-box; }
 
-        /* 切り抜き用モーダル */
+        /* 切り抜きモーダル */
         #crop-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:2000; flex-direction:column; }
         .crop-container { flex:1; position:relative; overflow:hidden; }
         .crop-controls { background:white; padding:20px; display:flex; justify-content:space-between; }
 
-        /* 共通UI */
         .view { display: none; max-width: 600px; margin: 0 auto; }
         .card { background: white; padding: 18px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px; }
         input, button, textarea { display: block; width: 100%; padding: 14px; margin: 12px 0; box-sizing: border-box; border-radius: 12px; border: 1px solid #ddd; font-size: 16px; }
-        button { background: var(--main-blue); color: white; border: none; font-weight: bold; }
+        button { background: var(--main-blue); color: white; border: none; font-weight: bold; cursor: pointer; }
         
-        /* トーク画面 */
-        #msg-list { display: flex; flex-direction: column-reverse; gap: 15px; padding-bottom: 90px; }
+        /* チャット */
+        #msg-list { display: flex; flex-direction: column-reverse; gap: 15px; padding-bottom: 100px; }
         .msg-bubble { display: flex; align-items: flex-start; gap: 10px; max-width: 88%; }
         .msg-bubble.mine { align-self: flex-end; flex-direction: row-reverse; }
         .user-icon { width: 38px; height: 38px; border-radius: 50%; background: #ddd; object-fit: cover; flex-shrink: 0; }
         .msg-content { background: white; padding: 10px 14px; border-radius: 18px; font-size: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .mine .msg-content { background: var(--main-blue); color: white; }
         .msg-img { max-width: 100%; border-radius: 10px; margin-top: 5px; }
+        audio { margin-top: 5px; max-width: 100%; height: 35px; }
 
-        .input-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 12px; display: flex; gap: 10px; border-top: 1px solid #ddd; z-index: 800; }
+        /* 入力バー */
+        .input-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 12px; display: flex; gap: 8px; border-top: 1px solid #ddd; z-index: 800; align-items: center; }
         #overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.3); z-index:1050; }
+        .mic-btn { background: #ff3b30; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; border: none; padding: 0; color: white; }
+        .mic-btn.recording { animation: pulse 1s infinite; background: #5856d6; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -62,54 +65,52 @@
     </div>
 
     <div id="crop-modal">
-        <div class="crop-container">
-            <img id="crop-image" style="max-width:100%;">
-        </div>
+        <div class="crop-container"><img id="crop-image"></div>
         <div class="crop-controls">
-            <button onclick="cancelCrop()" style="background:#8e8e93; width:45%;">キャンセル</button>
-            <button onclick="doneCrop()" style="width:45%;">決定</button>
+            <button onclick="cancelCrop()" style="background:#8e8e93; width:45%;">やめる</button>
+            <button onclick="doneCrop()" style="width:45%;">OK</button>
         </div>
     </div>
 
     <div class="main-content">
         <div id="login-view" class="view">
             <div class="card">
-                <input type="email" id="email" placeholder="メールアドレス">
+                <h1>COMON</h1>
+                <input type="email" id="email" placeholder="メール">
                 <input type="password" id="password" placeholder="パスワード">
                 <button onclick="login()">ログイン</button>
-                <button onclick="signUp()" style="background:#8e8e93">新規作成</button>
+                <button onclick="signUp()" style="background:#8e8e93">新規登録</button>
             </div>
         </div>
 
         <div id="profile-view" class="view">
             <div class="card">
-                <h3>プロフィール更新</h3>
-                <div style="text-align:center; margin-bottom:15px;">
-                    <img id="p-preview" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:2px solid #ddd;">
+                <h3>プロフィール設定</h3>
+                <div style="text-align:center;">
+                    <img id="p-preview" style="width:100px; height:100px; border-radius:50%; object-fit:cover;">
                 </div>
                 <input type="file" id="p-file-input" accept="image/*" onchange="startCrop(event)">
-                <input type="text" id="p-name-input" placeholder="表示名">
-                <button id="p-save-btn" onclick="updateProfile()">プロフィールを更新する</button>
+                <input type="text" id="p-name-input" placeholder="名前">
+                <button id="p-save-btn" onclick="updateProfile()">保存する</button>
             </div>
         </div>
 
         <div id="home-view" class="view">
-            <div class="card"><button onclick="createRoom()">＋ ルーム作成</button></div>
+            <div class="card"><button onclick="createRoom()">＋ 新規ルーム</button></div>
             <div id="room-list"></div>
         </div>
 
         <div id="memo-view" class="view">
-            <div class="card">
-                <textarea id="memo-input" style="height:400px;" placeholder="メモ..."></textarea>
-            </div>
+            <div class="card"><textarea id="memo-input" style="height:400px;" placeholder="自分用メモ..."></textarea></div>
         </div>
 
         <div id="chat-view" class="view">
             <div id="msg-list"></div>
             <div class="input-bar">
-                <label style="background:#eee; padding:10px; border-radius:50%; cursor:pointer;">📎<input type="file" id="chat-file" style="display:none;"></label>
-                <input type="text" id="chat-input" placeholder="メッセージ...">
-                <button onclick="sendMessage()" style="width:60px;">送る</button>
+                <label style="font-size:24px; cursor:pointer;">📎<input type="file" id="chat-file" style="display:none;"></label>
+                <input type="text" id="chat-input" placeholder="メッセージ..." style="flex:1;">
+                <button class="mic-btn" id="mic-btn" onclick="toggleRecording()">🎤</button>
+                <button onclick="sendMessage()" style="width:60px; margin:0;">送る</button>
             </div>
         </div>
     </div>
@@ -117,7 +118,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
         const firebaseConfig = {
@@ -134,9 +135,8 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        let userProfile = { name: "ゲスト", icon: "" };
-        let cropper = null;
-        let croppedBlob = null;
+        let userProfile = { name: "名無し", icon: "" };
+        let cropper, croppedBlob, mediaRecorder, audioChunks = [];
 
         window.toggleMenu = () => {
             document.getElementById('sidebar').classList.toggle('open');
@@ -153,61 +153,73 @@
             document.getElementById(id).style.display = 'block';
         };
 
-        // 切り抜きロジック
+        // プロフィール更新修正
+        window.updateProfile = async () => {
+            const btn = document.getElementById('p-save-btn');
+            btn.innerText = "保存中..."; btn.disabled = true;
+            try {
+                let iconUrl = userProfile.icon || "";
+                if (croppedBlob) {
+                    const sRef = ref(storage, `users/${auth.currentUser.uid}/icon`);
+                    await uploadBytes(sRef, croppedBlob);
+                    iconUrl = await getDownloadURL(sRef);
+                }
+                const name = document.getElementById('p-name-input').value || "名無し";
+                await setDoc(doc(db, "users", auth.currentUser.uid), { name, icon: iconUrl }, { merge: true });
+                alert("保存完了！");
+                location.hash = ""; // ホームへ
+            } catch (e) { alert(e.message); }
+            btn.innerText = "保存する"; btn.disabled = false;
+        };
+
+        // ボイスメッセージ
+        window.toggleRecording = async () => {
+            const btn = document.getElementById('mic-btn');
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+                btn.classList.remove('recording');
+            } else {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = async () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const rid = location.hash.substring(1);
+                    const sRef = ref(storage, `rooms/${rid}/voice_${Date.now()}.webm`);
+                    await uploadBytes(sRef, blob);
+                    const url = await getDownloadURL(sRef);
+                    await addDoc(collection(db, `rooms/${rid}/messages`), {
+                        uid: auth.currentUser.uid, name: userProfile.name, icon: userProfile.icon,
+                        voiceUrl: url, createdAt: Date.now()
+                    });
+                };
+                mediaRecorder.start();
+                btn.classList.add('recording');
+            }
+        };
+
+        // 切り抜き
         window.startCrop = (e) => {
             const file = e.target.files[0];
-            if (!file) return;
             const reader = new FileReader();
-            reader.onload = (event) => {
+            reader.onload = (ev) => {
                 const img = document.getElementById('crop-image');
-                img.src = event.target.result;
+                img.src = ev.target.result;
                 document.getElementById('crop-modal').style.display = 'flex';
-                if (cropper) cropper.destroy();
-                cropper = new Cropper(img, {
-                    aspectRatio: 1,
-                    viewMode: 1,
-                    background: false
-                });
+                if(cropper) cropper.destroy();
+                cropper = new Cropper(img, { aspectRatio:1, viewMode:1 });
             };
             reader.readAsDataURL(file);
         };
-
-        window.cancelCrop = () => {
-            document.getElementById('crop-modal').style.display = 'none';
-            document.getElementById('p-file-input').value = "";
-        };
-
         window.doneCrop = () => {
-            cropper.getCroppedCanvas({ width: 400, height: 400 }).toBlob((blob) => {
-                croppedBlob = blob;
-                document.getElementById('p-preview').src = URL.createObjectURL(blob);
+            cropper.getCroppedCanvas({width:400, height:400}).toBlob(b => {
+                croppedBlob = b;
+                document.getElementById('p-preview').src = URL.createObjectURL(b);
                 document.getElementById('crop-modal').style.display = 'none';
             });
         };
-
-        // プロフィール更新
-        window.updateProfile = async () => {
-            const newName = document.getElementById('p-name-input').value;
-            const btn = document.getElementById('p-save-btn');
-            btn.innerText = "保存中...";
-            btn.disabled = true;
-
-            let iconUrl = userProfile.icon;
-            if (croppedBlob) {
-                const sRef = ref(storage, `users/${auth.currentUser.uid}/icon`);
-                await uploadBytes(sRef, croppedBlob);
-                iconUrl = await getDownloadURL(sRef);
-            }
-
-            await setDoc(doc(db, "users", auth.currentUser.uid), {
-                name: newName || userProfile.name,
-                icon: iconUrl
-            }, { merge: true });
-
-            alert("アップデート成功！");
-            location.hash = "";
-            location.reload();
-        };
+        window.cancelCrop = () => document.getElementById('crop-modal').style.display = 'none';
 
         onAuthStateChanged(auth, async user => {
             if (user) {
@@ -216,74 +228,59 @@
                     userProfile = uDoc.data();
                     document.getElementById('p-name-input').value = userProfile.name;
                     document.getElementById('p-preview').src = userProfile.icon || 'https://via.placeholder.com/100';
-                    const hash = location.hash.substring(1);
-                    if(hash === "profile") showView('profile-view');
-                    else if(hash === "memo") showView('memo-view');
-                    else if(hash !== "") { showView('chat-view'); loadMessages(hash); }
+                    const h = location.hash.substring(1);
+                    if(h === "profile") showView('profile-view');
+                    else if(h === "memo") showView('memo-view');
+                    else if(h !== "") { showView('chat-view'); loadMessages(h); }
                     else { showView('home-view'); loadRooms(); }
                 } else { showView('profile-view'); }
             } else { showView('login-view'); }
         });
 
-        // ログイン・登録
-        window.signUp = () => {
-            const e = document.getElementById('email').value, p = document.getElementById('password').value;
-            createUserWithEmailAndPassword(auth, e, p).then(() => location.hash="profile").catch(err => alert(err.message));
-        };
-        window.login = () => {
-            const e = document.getElementById('email').value, p = document.getElementById('password').value;
-            signInWithEmailAndPassword(auth, e, p).catch(err => alert(err.message));
-        };
-        window.logout = () => { signOut(auth); location.hash=""; };
+        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(alert);
+        window.signUp = () => createUserWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(alert);
+        window.logout = () => signOut(auth);
 
-        // 以下、トーク・メッセージ等の既存機能（省略なしで実装済み）
         window.createRoom = async () => {
             const n = prompt("ルーム名");
-            if (!n) return;
-            const dr = await addDoc(collection(db, "rooms"), { name: n, host: auth.currentUser.uid, createdAt: Date.now() });
-            location.hash = dr.id;
+            if(n) { const d = await addDoc(collection(db, "rooms"), { name: n, host: auth.currentUser.uid, createdAt: Date.now() }); location.hash = d.id; }
         };
 
         window.sendMessage = async () => {
-            const txt = document.getElementById('chat-input').value, f = document.getElementById('chat-file').files[0], rid = location.hash.substring(1);
-            if (!txt && !f) return;
-            let fUrl = "", fName = "", fType = "";
+            const t = document.getElementById('chat-input').value, f = document.getElementById('chat-file').files[0], rid = location.hash.substring(1);
+            if (!t && !f) return;
+            let url = "", name = "", type = "";
             if (f) {
-                fName = f.name; fType = f.type;
                 const sRef = ref(storage, `rooms/${rid}/${Date.now()}_${f.name}`);
-                await uploadBytes(sRef, f); fUrl = await getDownloadURL(sRef);
+                await uploadBytes(sRef, f); url = await getDownloadURL(sRef);
+                name = f.name; type = f.type;
             }
             await addDoc(collection(db, `rooms/${rid}/messages`), {
                 uid: auth.currentUser.uid, name: userProfile.name, icon: userProfile.icon,
-                text: txt, fileUrl: fUrl, fileName: fName, fileType: fType, createdAt: Date.now()
+                text: t, fileUrl: url, fileName: name, fileType: type, createdAt: Date.now()
             });
             document.getElementById('chat-input').value = ""; document.getElementById('chat-file').value = "";
         };
 
         function loadRooms() {
             onSnapshot(query(collection(db, "rooms"), orderBy("createdAt", "desc")), s => {
-                const list = document.getElementById('room-list');
-                list.innerHTML = "";
-                s.forEach(d => {
-                    list.innerHTML += `<div class="card"><b>${d.data().name}</b><button onclick="location.hash='${d.id}'" style="width:80px; margin:0;">入る</button></div>`;
-                });
+                const l = document.getElementById('room-list'); l.innerHTML = "";
+                s.forEach(d => l.innerHTML += `<div class="card"><b>${d.data().name}</b><button onclick="location.hash='${d.id}'" style="width:80px; margin:0;">入る</button></div>`);
             });
         }
 
         function loadMessages(rid) {
             onSnapshot(query(collection(db, `rooms/${rid}/messages`), orderBy("createdAt", "desc")), s => {
-                const list = document.getElementById('msg-list'); list.innerHTML = "";
+                const l = document.getElementById('msg-list'); l.innerHTML = "";
                 s.forEach(d => {
                     const data = d.data(), isMine = data.uid === auth.currentUser.uid;
-                    let fileHTML = "";
-                    if (data.fileUrl) {
-                        if (data.fileType.includes('image')) fileHTML = `<img src="${data.fileUrl}" class="msg-img">`;
-                        else fileHTML = `<a href="${data.fileUrl}" target="_blank">📁 ${data.fileName}</a>`;
-                    }
+                    let content = `<b>${data.name}</b><br>${data.text || ""}`;
+                    if (data.fileUrl) content += `<br><img src="${data.fileUrl}" class="msg-img">`;
+                    if (data.voiceUrl) content += `<br><audio controls src="${data.voiceUrl}"></audio>`;
                     const item = document.createElement('div');
                     item.className = `msg-bubble ${isMine ? 'mine' : ''}`;
-                    item.innerHTML = `<img src="${data.icon || 'https://via.placeholder.com/50'}" class="user-icon"><div class="msg-content"><b>${data.name}</b><br>${data.text || ""}${fileHTML}</div>`;
-                    list.appendChild(item);
+                    item.innerHTML = `<img src="${data.icon || 'https://via.placeholder.com/50'}" class="user-icon"><div class="msg-content">${content}</div>`;
+                    l.appendChild(item);
                 });
             });
         }
