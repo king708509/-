@@ -5,52 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>COMON COMON</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f0f2f5; color: #1c1e21; }
+        body { font-family: -apple-system, sans-serif; margin: 0; background: #f0f2f5; }
         .view { display: none; padding: 20px; max-width: 500px; margin: 0 auto; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        h1 { font-size: 28px; text-align: center; color: #007aff; margin-bottom: 20px; }
-        input, button { display: block; width: 100%; padding: 14px; margin: 12px 0; box-sizing: border-box; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; }
+        h1 { font-size: 28px; text-align: center; color: #007aff; }
+        input, button { display: block; width: 100%; padding: 14px; margin: 12px 0; box-sizing: border-box; border-radius: 10px; border: 1px solid #ddd; }
         button { background: #007aff; color: white; border: none; font-weight: bold; cursor: pointer; }
-        button:active { opacity: 0.8; transform: scale(0.98); }
         .secondary-btn { background: #8e8e93; }
-        .msg-item { background: white; padding: 10px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        img, video { max-width: 100%; border-radius: 8px; display: block; margin: 5px 0; }
-        .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .msg-item { background: white; padding: 10px; border-radius: 10px; margin-bottom: 10px; }
+        img { max-width: 100%; border-radius: 8px; }
     </style>
 </head>
 <body>
-
     <div id="login-view" class="view">
         <h1>COMON COMON</h1>
         <div class="card">
-            <p style="text-align:center; font-size:14px; color:#666;">まずは新規登録してね！</p>
             <input type="email" id="email" placeholder="メールアドレス">
             <input type="password" id="password" placeholder="パスワード">
             <button onclick="login()">ログイン</button>
-            <button class="secondary-btn" onclick="signUp()">新しくアカウントを作る</button>
+            <button class="secondary-btn" onclick="signUp()">新規登録</button>
         </div>
     </div>
-
     <div id="home-view" class="view">
-        <div class="nav">
-            <h2>ホーム</h2>
-            <button onclick="logout()" style="width:auto; margin:0; padding:8px 15px;" class="secondary-btn">ログアウト</button>
-        </div>
-        <div class="card">
-            <button onclick="createRoom()">＋ 新しいルームを作成</button>
-        </div>
-        <p style="font-size:12px; color:#888; text-align:center;">作成後、URLを友達に送ってね</p>
+        <h1>ホーム</h1>
+        <button onclick="createRoom()">＋ ルーム作成</button>
+        <button onclick="logout()" class="secondary-btn">ログアウト</button>
     </div>
-
     <div id="chat-view" class="view">
-        <div class="nav">
-            <button onclick="location.hash=''" style="width:auto; margin:0; padding:8px 15px;" class="secondary-btn">← 戻る</button>
-            <span id="room-id-display" style="font-size:12px; color:#888;"></span>
-        </div>
-        <div id="msg-list"></div>
-        <div class="card" style="position: sticky; bottom: 20px; margin-top: 20px;">
-            <input type="file" id="file-input" accept="image/*,video/*,audio/*">
-            <button id="send-btn" onclick="sendFile()">ファイルを送信</button>
+        <button onclick="location.hash=''" class="secondary-btn">← 戻る</button>
+        <div id="msg-list" style="margin-top:20px;"></div>
+        <div class="card">
+            <input type="file" id="file-input">
+            <button id="send-btn" onclick="sendFile()">送信</button>
         </div>
     </div>
 
@@ -60,14 +46,14 @@
         import { getFirestore, collection, addDoc, query, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
-        // Firebase設定
         const firebaseConfig = {
-            apiKey: "AIzaSyAP_BaYs01oniLSPQ5EOPV-L177N0GkQss",
+            apiKey: "AIzaSyAP_BaYs01oniLSPQ5EOPV9m9brjKn-A2c",
             authDomain: "soshozi.firebaseapp.com",
             projectId: "soshozi",
-            storageBucket: "soshozi.appspot.com",
-            messagingSenderId: "305374828131",
-            appId: "1:305374828131:web:8a54602f3a619070387532"
+            storageBucket: "soshozi.firebasestorage.app",
+            messagingSenderId: "607624264440",
+            appId: "1:607624264440:web:f3798bdc083a78b426190d",
+            measurementId: "G-W7XMFWP8JE"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -77,108 +63,57 @@
 
         const showView = (id) => {
             document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-            const target = document.getElementById(id);
-            if(target) target.style.display = 'block';
+            document.getElementById(id).style.display = 'block';
         };
 
         window.signUp = () => {
             const e = document.getElementById('email').value;
             const p = document.getElementById('password').value;
-            if(!e || !p) return alert("メアドとパスを入力してね");
-            createUserWithEmailAndPassword(auth, e, p)
-                .then(() => alert("登録に成功しました！そのままログインされます。"))
-                .catch(err => alert("エラー: " + err.message));
+            createUserWithEmailAndPassword(auth, e, p).then(() => alert("成功！")).catch(err => alert("エラー: " + err.code));
         };
-
         window.login = () => {
             const e = document.getElementById('email').value;
             const p = document.getElementById('password').value;
-            signInWithEmailAndPassword(auth, e, p)
-                .catch(err => alert("ログイン失敗: " + err.message));
+            signInWithEmailAndPassword(auth, e, p).catch(err => alert("失敗: " + err.code));
         };
-
         window.logout = () => signOut(auth);
-
-        window.createRoom = async () => {
-            const name = prompt("ルームの名前を決めてね");
-            if (!name) return;
-            try {
-                const docRef = await addDoc(collection(db, "rooms"), {
-                    name: name,
-                    host: auth.currentUser.uid,
-                    createdAt: Date.now()
-                });
-                location.hash = docRef.id;
-            } catch (e) { alert("ルーム作成失敗"); }
-        };
-
-        window.sendFile = async () => {
-            const fileInput = document.getElementById('file-input');
-            const file = fileInput.files[0];
-            const roomId = location.hash.substring(1);
-            if (!file || !roomId) return alert("ファイルを選んでね");
-
-            const btn = document.getElementById('send-btn');
-            btn.disabled = true; btn.innerText = "送信中...";
-
-            try {
-                const sRef = ref(storage, `rooms/${roomId}/${Date.now()}_${file.name}`);
-                const snapshot = await uploadBytes(sRef, file);
-                const url = await getDownloadURL(snapshot.ref);
-
-                await addDoc(collection(db, `rooms/${roomId}/messages`), {
-                    uid: auth.currentUser.uid,
-                    type: file.type.split('/')[0],
-                    fileUrl: url,
-                    fileName: file.name,
-                    createdAt: Date.now()
-                });
-                fileInput.value = "";
-                alert("送信完了！");
-            } catch (e) { alert("送信エラーが発生しました"); } 
-            finally { btn.disabled = false; btn.innerText = "ファイルを送信"; }
-        };
 
         onAuthStateChanged(auth, user => {
             if (user) {
                 const rid = location.hash.substring(1);
-                if (rid) {
-                    showView('chat-view');
-                    document.getElementById('room-id-display').innerText = "Room ID: " + rid;
-                    loadMessages(rid);
-                } else {
-                    showView('home-view');
-                }
-            } else {
-                showView('login-view');
-            }
+                rid ? (showView('chat-view'), loadMessages(rid)) : showView('home-view');
+            } else { showView('login-view'); }
         });
 
-        window.addEventListener('hashchange', () => {
-            location.reload();
-        });
+        window.createRoom = async () => {
+            const name = prompt("ルーム名");
+            if (!name) return;
+            const docRef = await addDoc(collection(db, "rooms"), { name, createdAt: Date.now() });
+            location.hash = docRef.id;
+        };
+
+        window.sendFile = async () => {
+            const file = document.getElementById('file-input').files[0];
+            const roomId = location.hash.substring(1);
+            if (!file) return;
+            const sRef = ref(storage, `rooms/${roomId}/${Date.now()}_${file.name}`);
+            await uploadBytes(sRef, file);
+            const url = await getDownloadURL(sRef);
+            await addDoc(collection(db, `rooms/${roomId}/messages`), { type: file.type.split('/')[0], fileUrl: url, createdAt: Date.now() });
+            alert("送信完了！");
+        };
 
         function loadMessages(rid) {
-            const q = query(collection(db, `rooms/${rid}/messages`), orderBy("createdAt", "desc"));
-            onSnapshot(q, (snapshot) => {
+            onSnapshot(query(collection(db, `rooms/${rid}/messages`), orderBy("createdAt", "desc")), s => {
                 const list = document.getElementById('msg-list');
                 list.innerHTML = "";
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const item = document.createElement('div');
-                    item.className = "msg-item";
-                    let content = `<p style="font-size:10px; color:#aaa; margin:0;">${new Date(data.createdAt).toLocaleTimeString()}</p>`;
-                    
-                    if (data.type === 'image') content += `<img src="${data.fileUrl}">`;
-                    else if (data.type === 'video') content += `<video src="${data.fileUrl}" controls></video>`;
-                    else if (data.type === 'audio') content += `<audio src="${data.fileUrl}" controls style="width:100%"></audio>`;
-                    else content += `<a href="${data.fileUrl}" target="_blank">📎 ${data.fileName}</a>`;
-                    
-                    item.innerHTML = content;
-                    list.appendChild(item);
+                s.forEach(d => {
+                    const data = d.data();
+                    list.innerHTML += `<div class="msg-item"><img src="${data.fileUrl}"></div>`;
                 });
             });
         }
+        window.addEventListener('hashchange', () => location.reload());
     </script>
 </body>
 </html>
