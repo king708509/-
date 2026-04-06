@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>COMON PERSISTENT</title>
+    <title>COMON TOTAL-STABLE</title>
     <style>
         :root { --main-blue: #007aff; --bg-gray: #f0f2f5; --sidebar-w: 260px; }
         body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg-gray); color: #1c1e21; overflow-x: hidden; }
@@ -15,7 +15,8 @@
         .view { display: none; max-width: 600px; margin: 0 auto; }
         .card { background: white; padding: 18px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px; }
         input, button, textarea { display: block; width: 100%; padding: 14px; margin: 12px 0; box-sizing: border-box; border-radius: 12px; border: 1px solid #ddd; font-size: 16px; }
-        button { background: var(--main-blue); color: white; border: none; font-weight: bold; cursor: pointer; }
+        button { background: var(--main-blue); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
         .secondary-btn { background: #8e8e93; margin-top: 5px; }
         
         #msg-list { display: flex; flex-direction: column-reverse; gap: 12px; }
@@ -70,8 +71,7 @@
             <div id="join-form" class="card" style="display:none; border: 2px solid var(--main-blue);">
                 <input type="text" id="join-id" placeholder="ルームID">
                 <input type="text" id="join-pass" placeholder="6桁パスワード">
-                <button onclick="joinRoom()">参加を確定する</button>
-                <button onclick="this.parentElement.style.display='none'" class="secondary-btn">キャンセル</button>
+                <button onclick="joinRoom()">参加を確定</button>
             </div>
             <h4 style="margin: 10px 0;">参加中のトークルーム</h4>
             <div id="room-list"></div>
@@ -83,7 +83,7 @@
                 <a href="https://gigafile.nu/" target="_blank" class="btn-round">📁</a>
                 <div id="mic-btn" class="btn-round" onclick="toggleRecording()">🎤</div>
                 <input type="text" id="chat-input" placeholder="メッセージ...">
-                <button onclick="sendMessage()" style="width:60px; margin:0;">送信</button>
+                <button id="send-btn" onclick="sendMessage()" style="width:60px; margin:0;">送信</button>
             </div>
         </div>
 
@@ -140,7 +140,6 @@
             document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
             document.getElementById(id).style.display = 'block';
             document.getElementById('room-controls').style.display = (id === 'chat-view') ? 'block' : 'none';
-            document.getElementById('header-spacer').style.display = (id === 'chat-view') ? 'none' : 'block';
         };
 
         onAuthStateChanged(auth, async user => {
@@ -161,50 +160,28 @@
             } else { showView('login-view'); }
         });
 
-        // 参加処理（ここで確実にメンバーとして永続化する）
-        window.joinRoom = async () => {
-            const id = document.getElementById('join-id').value.trim().toUpperCase();
-            const pass = document.getElementById('join-pass').value.trim();
-            if(!id || !pass) return alert("IDとパスワードを入力してね");
+        // テキスト送信（安定版）
+        window.sendMessage = async () => {
+            const btn = document.getElementById('send-btn');
+            const input = document.getElementById('chat-input');
+            const rid = location.hash.substring(1);
+            if (!input.value.trim() || !rid || btn.disabled) return;
 
+            btn.disabled = true;
             try {
-                const rSnap = await getDoc(doc(db, "rooms", id));
-                if(rSnap.exists()){
-                    if(rSnap.data().password === pass) {
-                        // データベースのメンバーリストに自分を追加
-                        await updateDoc(doc(db, "rooms", id), {
-                            members: arrayUnion(auth.currentUser.uid)
-                        });
-                        alert("ルームをリストに追加しました！");
-                        document.getElementById('join-form').style.display = 'none';
-                        location.hash = id;
-                    } else { alert("パスワードが違います"); }
-                } else { alert("ルームが見つかりません"); }
-            } catch(e) { alert("エラー: " + e.message); }
+                await addDoc(collection(db, `rooms/${rid}/messages`), {
+                    uid: auth.currentUser.uid,
+                    name: userProfile.name,
+                    emoji: userProfile.emoji,
+                    text: input.value.trim(),
+                    createdAt: Date.now()
+                });
+                input.value = "";
+            } catch(e) { alert("送信エラー: " + e.code); }
+            finally { btn.disabled = false; }
         };
 
-        function loadRooms() {
-            // 「自分がメンバーに含まれている」ルームを常時監視
-            const q = query(collection(db, "rooms"), where("members", "array-contains", auth.currentUser.uid), orderBy("createdAt", "desc"));
-            onSnapshot(q, s => {
-                const l = document.getElementById('room-list'); l.innerHTML = "";
-                if(s.empty) {
-                    l.innerHTML = "<p style='font-size:12px; color:gray;'>参加中のルームはありません。</p>";
-                }
-                s.forEach(d => {
-                    const data = d.data();
-                    l.innerHTML += `
-                        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <b>${data.name}</b><br>
-                                <small style="color:gray; font-size:10px;">ID: ${d.id}</small>
-                            </div>
-                            <button onclick="location.hash='${d.id}'" style="width:70px; margin:0; padding:8px;">入る</button>
-                        </div>`;
-                });
-            });
-        }
-
+        // ボイス送信（PC/スマホ互換版）
         window.toggleRecording = async () => {
             const btn = document.getElementById('mic-btn');
             if (mediaRecorder && mediaRecorder.state === "recording") {
@@ -226,46 +203,34 @@
                             await addDoc(collection(db, `rooms/${rid}/messages`), {
                                 uid: auth.currentUser.uid, name: userProfile.name, emoji: userProfile.emoji,
                                 voiceData: reader.result, createdAt: Date.now()
-                            }).catch(e => alert("送信失敗: " + e.message));
+                            }).catch(e => alert("ボイス送信失敗"));
                         };
                     };
                     mediaRecorder.start();
                     btn.style.background = "#ff3b30";
-                } catch(e) { alert("マイクエラー: " + e.message); }
+                } catch(e) { alert("マイクが使えません"); }
             }
         };
 
-        window.sendMessage = async () => {
-            const t = document.getElementById('chat-input').value, rid = location.hash.substring(1);
-            if (!t) return;
-            await addDoc(collection(db, `rooms/${rid}/messages`), {
-                uid: auth.currentUser.uid, name: userProfile.name, emoji: userProfile.emoji, text: t, createdAt: Date.now()
-            }).then(() => { document.getElementById('chat-input').value = ""; }).catch(e => alert("送信失敗: " + e.message));
+        // 参加・リスト維持機能
+        window.joinRoom = async () => {
+            const id = document.getElementById('join-id').value.trim().toUpperCase(), pass = document.getElementById('join-pass').value.trim();
+            const rSnap = await getDoc(doc(db, "rooms", id));
+            if(rSnap.exists() && rSnap.data().password === pass) {
+                await updateDoc(doc(db, "rooms", id), { members: arrayUnion(auth.currentUser.uid) });
+                location.hash = id;
+            } else { alert("IDかパスが違うよ"); }
         };
 
-        document.getElementById('memo-input').oninput = async (e) => {
-            if(auth.currentUser) await setDoc(doc(db, "memos", auth.currentUser.uid), { text: e.target.value });
-        };
+        function loadRooms() {
+            onSnapshot(query(collection(db, "rooms"), where("members", "array-contains", auth.currentUser.uid), orderBy("createdAt", "desc")), s => {
+                const l = document.getElementById('room-list'); l.innerHTML = "";
+                s.forEach(d => {
+                    l.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;"><b>${d.data().name}</b><button onclick="location.hash='${d.id}'" style="width:70px; margin:0;">入る</button></div>`;
+                });
+            });
+        }
 
-        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(e => alert(e.message));
-        window.signUp = () => createUserWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(e => alert(e.message));
-        window.logout = () => signOut(auth).then(() => location.reload());
-        window.showJoinForm = () => document.getElementById('join-form').style.display = 'block';
-        window.createRoom = async () => {
-            const n = prompt("ルーム名"); if(!n) return;
-            const rid = Math.random().toString(36).substring(2, 8).toUpperCase();
-            const rpass = Math.floor(100000 + Math.random() * 900000).toString();
-            await setDoc(doc(db, "rooms", rid), { name: n, host: auth.currentUser.uid, password: rpass, members: [auth.currentUser.uid], createdAt: Date.now() });
-            alert(`ルーム作成！\nID: ${rid}\nPASS: ${rpass}`); location.hash = rid;
-        };
-        window.showRoomInfo = async () => {
-            const rSnap = await getDoc(doc(db, "rooms", location.hash.substring(1)));
-            if(rSnap.exists()) alert(`ルーム情報\nID: ${location.hash.substring(1)}\nPASS: ${rSnap.data().password}`);
-        };
-        window.updateProfile = async () => {
-            await setDoc(doc(db, "users", auth.currentUser.uid), { name: document.getElementById('p-name-input').value, emoji: document.getElementById('p-emoji-input').value }, { merge: true });
-            location.hash = ""; location.reload();
-        };
         function loadMessages(rid) {
             onSnapshot(query(collection(db, `rooms/${rid}/messages`), orderBy("createdAt", "desc")), s => {
                 const l = document.getElementById('msg-list'); l.innerHTML = "";
@@ -280,6 +245,30 @@
                 });
             });
         }
+
+        // メモ帳・その他
+        document.getElementById('memo-input').oninput = async (e) => {
+            if(auth.currentUser) await setDoc(doc(db, "memos", auth.currentUser.uid), { text: e.target.value });
+        };
+        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(e => alert("ログインエラー"));
+        window.signUp = () => createUserWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(e => alert("登録エラー"));
+        window.logout = () => signOut(auth).then(() => location.reload());
+        window.showJoinForm = () => document.getElementById('join-form').style.display = 'block';
+        window.createRoom = async () => {
+            const n = prompt("ルーム名"); if(!n) return;
+            const rid = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const rpass = Math.floor(100000 + Math.random() * 900000).toString();
+            await setDoc(doc(db, "rooms", rid), { name: n, host: auth.currentUser.uid, password: rpass, members: [auth.currentUser.uid], createdAt: Date.now() });
+            alert(`ルーム作成！\nID: ${rid}\nPASS: ${rpass}`); location.hash = rid;
+        };
+        window.showRoomInfo = async () => {
+            const rSnap = await getDoc(doc(db, "rooms", location.hash.substring(1)));
+            if(rSnap.exists()) alert(`ID: ${location.hash.substring(1)}\nPASS: ${rSnap.data().password}`);
+        };
+        window.updateProfile = async () => {
+            await setDoc(doc(db, "users", auth.currentUser.uid), { name: document.getElementById('p-name-input').value, emoji: document.getElementById('p-emoji-input').value }, { merge: true });
+            location.hash = ""; location.reload();
+        };
         window.onhashchange = () => location.reload();
     </script>
 </body>
