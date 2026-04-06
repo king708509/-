@@ -16,7 +16,6 @@
         .header-right { position: absolute; right: 18px; font-size: 22px; cursor: pointer; padding: 5px; }
         .main-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
         
-        /* チャットUI */
         #msg-list { display: flex; flex-direction: column; padding: 20px 15px 140px; gap: 20px; }
         .msg-bubble { display: flex; align-items: flex-start; gap: 12px; max-width: 85%; }
         .msg-bubble.mine { align-self: flex-end; flex-direction: row-reverse; }
@@ -26,17 +25,15 @@
         
         .input-bar { position: fixed; bottom: calc(65px + env(safe-area-inset-bottom)); left: 0; right: 0; background: var(--bg-main); padding: 12px 15px; border-top: 0.5px solid var(--border); z-index: 1050; display: none; align-items: center; gap: 10px; }
         .file-btn { font-size: 24px; cursor: pointer; user-select: none; }
-        .input-box-wrapper { background: var(--bg-input); border-radius: 22px; display: flex; align-items: center; padding: 0 15px; flex: 1; min-height: 44px; }
+        .input-box-wrapper { background: var(--bg-input); border-radius: 22px; display: flex; align-items: center; padding: 0 15px; flex: 1; min-height: 44px; position: relative; }
         .input-box-wrapper input { background: none; border: none; color: #fff; flex: 1; padding: 10px 0; outline: none; font-size: 16px; }
         
-        /* ボイスメモUI */
         .voice-section { background: var(--bg-card); margin: 15px; border-radius: 15px; padding: 20px; border: 0.5px solid var(--border); text-align: center; }
         .record-btn { width: 65px; height: 65px; border-radius: 50%; background: var(--error-red); border: none; color: #fff; font-weight: 900; cursor: pointer; margin-bottom: 10px; transition: transform 0.2s; }
         .record-btn.recording { animation: pulse 1s infinite; transform: scale(1.1); }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         #audio-list audio { width: 100%; height: 35px; margin-top: 10px; }
 
-        /* 追加: ボイスメッセージ用スタイル */
         .voice-msg-btn { font-size: 24px; cursor: pointer; user-select: none; transition: color 0.2s; }
         .voice-msg-btn.active { color: var(--error-red); animation: pulse 1s infinite; }
         .voice-rec-panel { display: none; position: absolute; left: 0; right: 0; background: var(--bg-input); padding: 10px 20px; border-radius: 22px; align-items: center; justify-content: space-between; z-index: 1100; }
@@ -45,12 +42,10 @@
         .voice-cancel { color: var(--text-muted); font-size: 14px; cursor: pointer; }
         .voice-send { color: var(--my-blue); font-weight: 900; cursor: pointer; }
 
-        /* タブバー */
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(65px + env(safe-area-inset-bottom)); background: var(--bg-card); border-top: 0.5px solid var(--border); display: flex; z-index: 1000; }
         .tab-item { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 11px; font-weight: 700; flex-direction: column; }
         .tab-item.active { color: #fff; }
 
-        /* 共通パーツ */
         .section-label { padding: 24px 16px 10px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
         .form-padding { padding: 0 16px; }
         input.base-input { background: var(--bg-card); border: 0.5px solid var(--border); color: #fff; padding: 15px; border-radius: 12px; width: 100%; box-sizing: border-box; margin-bottom: 15px; font-size: 16px; outline: none; }
@@ -61,10 +56,9 @@
 
         #room-menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: flex-end; }
         .menu-sheet { background: var(--bg-card); width: 100%; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 20px 0 calc(20px + env(safe-area-inset-bottom)); }
-        .menu-item { padding: 18px 25px; border-bottom: 0.5px solid var(--border); font-size: 16px; display: flex; justify-content: space-between; }
+        .menu-item { padding: 18px 25px; border-bottom: 0.5px solid var(--border); font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
         .danger { color: var(--error-red); }
 
-        /* 追加: イントロ & ローディング演出 */
         #loader-screen { position: fixed; inset: 0; background: #000; display: none; align-items: center; justify-content: center; z-index: 11000; }
         .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -83,9 +77,7 @@
 <body>
 
     <div id="enable-screen"><button id="enable-btn" onclick="startSequence()">ENABLE START</button></div>
-
     <div id="loader-screen"><div class="spinner"></div></div>
-
     <div id="intro-screen"><div id="intro-text">COMMON</div></div>
 
     <div id="app-body">
@@ -149,7 +141,7 @@
             <div id="voice-msg-trigger" class="voice-msg-btn" onclick="startVoiceMsgMode()">🎤</div>
             <div class="file-btn" onclick="openGigaFile()" title="ファイル送信">📎</div>
             <div class="input-box-wrapper">
-                <input type="text" id="chat-input" placeholder="メッセージ...">
+                <input type="text" id="chat-input" placeholder="メッセージ..." autocomplete="off">
                 <div id="voice-rec-panel" class="voice-rec-panel">
                     <div class="voice-timer" id="voice-timer">REC 00:00</div>
                     <div class="voice-cancel" onclick="cancelVoiceMsg()">キャンセル</div>
@@ -168,8 +160,8 @@
 
     <div id="room-menu-overlay" onclick="toggleRoomMenu()">
         <div class="menu-sheet" onclick="event.stopPropagation()">
-            <div class="menu-item"><span>Room ID</span> <span id="m-room-id">--</span></div>
-            <div class="menu-item"><span>Password</span> <span id="m-room-pass">--</span></div>
+            <div class="menu-item" onclick="copyToClipboard('m-room-id')"><span>Room ID</span> <span id="m-room-id" style="color:var(--text-muted)">--</span></div>
+            <div class="menu-item" onclick="copyToClipboard('m-room-pass')"><span>Password</span> <span id="m-room-pass" style="color:var(--text-muted)">--</span></div>
             <div id="host-tools"></div>
             <div class="menu-item danger" onclick="leaveRoom()">ルームを退会する</div>
             <div class="menu-item" onclick="toggleRoomMenu()" style="justify-content:center; font-weight:700;">閉じる</div>
@@ -195,23 +187,20 @@
         let mediaRecorder;
         let audioChunks = [];
 
-        // 追記：ボイスメッセージ用変数
         let msgRecorder;
         let msgChunks = [];
         let recInterval;
         let recSeconds = 0;
+        let isSending = false;
 
-        // ユーザー情報をUIにロードする関数
         const loadUserProfile = async (user) => {
             if (!user) return;
-            
             const uDoc = await getDoc(doc(db, "users", user.uid));
             if (uDoc.exists()) {
                 userProfile = uDoc.data();
             } else {
                 userProfile = { name: "", emoji: "👤", uid: user.uid };
             }
-
             document.getElementById('p-name').value = userProfile.name || "";
             document.getElementById('p-emoji').value = userProfile.emoji || "👤";
         };
@@ -219,17 +208,10 @@
         window.changeTab = async (tab) => {
             const user = auth.currentUser;
             if (!user) { renderTab('auth'); return; }
-
             if (tab !== 'profile') {
-                if (!userProfile || userProfile.uid !== user.uid) {
-                    await loadUserProfile(user);
-                }
-                if (!userProfile || !userProfile.name) {
-                    renderTab('profile');
-                    return;
-                }
+                if (!userProfile || userProfile.uid !== user.uid) await loadUserProfile(user);
+                if (!userProfile || !userProfile.name) { renderTab('profile'); return; }
             }
-
             renderTab(tab);
         };
 
@@ -252,10 +234,23 @@
             document.getElementById('view-title').innerText = titles[tab] || "COMMON";
 
             if (tab === 'home') loadMyRooms();
-            if (tab === 'chat') loadMessages();
+            if (tab === 'chat') { loadMessages(); scrollBottom(); }
+        }
+
+        function scrollBottom() {
+            setTimeout(() => {
+                const area = document.getElementById('scroll-area');
+                area.scrollTop = area.scrollHeight;
+            }, 100);
         }
 
         window.openGigaFile = () => { window.open('https://gigafile.nu/', '_blank'); };
+
+        window.copyToClipboard = (id) => {
+            const text = document.getElementById(id).innerText;
+            if(text === "--") return;
+            navigator.clipboard.writeText(text).then(() => alert("コピーしました"));
+        };
 
         window.toggleRecording = async () => {
             if (!mediaRecorder || mediaRecorder.state === "inactive") {
@@ -284,29 +279,24 @@
             }
         };
 
-        // --- 追記：ボイスメッセージ機能ロジック ---
         window.startVoiceMsgMode = async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                // 全機種互換性のためのMIMEタイプ設定（ブラウザが対応しているものを優先。WebM/AACなど）
                 const options = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
-                                ? { mimeType: 'audio/webm;codecs=opus' } 
-                                : { mimeType: 'audio/mp4' }; 
+                                ? { mimeType: 'audio/webm;codecs=opus', audioBitsPerSecond: 32000 } 
+                                : { mimeType: 'audio/mp4', audioBitsPerSecond: 32000 }; 
 
-                msgRecorder = new MediaRecorder(stream);
+                msgRecorder = new MediaRecorder(stream, options);
                 msgChunks = [];
-                msgRecorder.ondataavailable = (e) => msgChunks.push(e.data);
+                msgRecorder.ondataavailable = (e) => { if(e.data.size > 0) msgChunks.push(e.data); };
                 
                 msgRecorder.onstop = async () => {
                     if (msgChunks.length === 0) return;
                     const blob = new Blob(msgChunks, { type: msgRecorder.mimeType });
-                    // ファイルサイズ制限対策としてBase64変換して送信
+                    if (blob.size > 800000) { alert("録音時間が長すぎます（制限:約1MB）"); return; }
                     const reader = new FileReader();
                     reader.readAsDataURL(blob);
-                    reader.onloadend = async () => {
-                        const base64data = reader.result;
-                        await sendVoiceMessage(base64data);
-                    };
+                    reader.onloadend = async () => { await sendVoiceMessage(reader.result); };
                 };
 
                 msgRecorder.start();
@@ -326,17 +316,12 @@
         };
 
         window.cancelVoiceMsg = () => {
-            if (msgRecorder && msgRecorder.state !== "inactive") {
-                msgChunks = [];
-                msgRecorder.stop();
-            }
+            if (msgRecorder && msgRecorder.state !== "inactive") { msgChunks = []; msgRecorder.stop(); }
             resetVoiceUI();
         };
 
         window.stopAndSendVoiceMsg = () => {
-            if (msgRecorder && msgRecorder.state !== "inactive") {
-                msgRecorder.stop();
-            }
+            if (msgRecorder && msgRecorder.state !== "inactive") msgRecorder.stop();
             resetVoiceUI();
         };
 
@@ -348,17 +333,15 @@
         }
 
         async function sendVoiceMessage(audioData) {
-            if(!auth.currentUser || !currentRoomId) return;
-            const msgData = { 
-                uid: auth.currentUser.uid, 
-                emoji: userProfile?.emoji || "👤", 
-                voice: audioData, // 音声データを直接格納
-                time: Date.now() 
-            };
-            await addDoc(collection(db, "rooms", currentRoomId, "messages"), msgData);
+            if(!auth.currentUser || !currentRoomId || isSending) return;
+            isSending = true;
+            try {
+                const msgData = { uid: auth.currentUser.uid, emoji: userProfile?.emoji || "👤", voice: audioData, time: Date.now() };
+                await addDoc(collection(db, "rooms", currentRoomId, "messages"), msgData);
+            } catch(e) { console.error(e); }
+            isSending = false;
         }
 
-        // --- イントロサウンド生成関数 ---
         const playTudumSound = (ctx) => {
             const now = ctx.currentTime;
             const master = ctx.createGain();
@@ -385,30 +368,20 @@
             [osc1, osc2].forEach(o => { o.start(now); o.stop(now + 3.5); });
         };
 
-        // --- 修正: startSequence ---
         window.startSequence = async () => {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') await audioCtx.resume();
-
-            // イネイブル消去
             document.getElementById('enable-screen').style.display = 'none';
-            
-            // ローディング表示 (約1.5秒)
             const loader = document.getElementById('loader-screen');
             loader.style.display = 'flex';
 
             setTimeout(() => {
                 loader.style.display = 'none';
-                
-                // イントロ表示
                 const intro = document.getElementById('intro-screen');
                 intro.style.display = 'flex';
                 intro.classList.add('animate-intro');
-                
-                // サウンド再生
                 playTudumSound(audioCtx);
 
-                // イントロ終了後にログイン画面へ
                 setTimeout(() => {
                     intro.style.transition = 'opacity 0.8s';
                     intro.style.opacity = '0';
@@ -423,13 +396,8 @@
 
         onAuthStateChanged(auth, async (user) => {
             if (document.getElementById('app-body').style.display === 'flex') {
-                if (user) {
-                    await loadUserProfile(user);
-                    window.changeTab('home');
-                } else {
-                    userProfile = null;
-                    renderTab('auth');
-                }
+                if (user) { await loadUserProfile(user); window.changeTab('home'); } 
+                else { userProfile = null; renderTab('auth'); }
             }
         });
 
@@ -438,13 +406,10 @@
             const pass = document.getElementById('auth-password').value;
             if(!email || !pass) return alert("未入力");
             try {
-                if(authMode === 'login') {
-                    const res = await signInWithEmailAndPassword(auth, email, pass);
-                    await loadUserProfile(res.user);
-                } else {
-                    const res = await createUserWithEmailAndPassword(auth, email, pass);
-                    await loadUserProfile(res.user);
-                }
+                let res;
+                if(authMode === 'login') res = await signInWithEmailAndPassword(auth, email, pass);
+                else res = await createUserWithEmailAndPassword(auth, email, pass);
+                await loadUserProfile(res.user);
             } catch (e) { alert(e.message); }
         };
 
@@ -454,19 +419,14 @@
             document.getElementById('auth-toggle-msg').innerText = (authMode === 'login') ? '新規登録はこちら' : 'ログインはこちら';
         };
 
-        window.logout = () => signOut(auth).then(() => {
-            userProfile = null;
-            location.reload();
-        });
+        window.logout = () => signOut(auth).then(() => { userProfile = null; location.reload(); });
 
         window.updateProfile = async () => {
             const name = document.getElementById('p-name').value.trim();
             const emoji = document.getElementById('p-emoji').value.trim() || "👤";
             if(!name) return alert("名前必須");
-            
             const uid = auth.currentUser.uid;
             await setDoc(doc(db, "users", uid), { name, emoji, uid }, { merge: true });
-            
             userProfile = { name, emoji, uid };
             window.changeTab('home');
         };
@@ -490,19 +450,17 @@
         };
 
         window.sendMessage = async () => {
-            if(!auth.currentUser || !currentRoomId) return;
+            if(!auth.currentUser || !currentRoomId || isSending) return;
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
             if(!text) return;
-            
-            const msgData = { 
-                uid: auth.currentUser.uid, 
-                emoji: userProfile?.emoji || "👤", 
-                text, 
-                time: Date.now() 
-            };
+            isSending = true;
+            const msgData = { uid: auth.currentUser.uid, emoji: userProfile?.emoji || "👤", text, time: Date.now() };
             input.value = "";
-            await addDoc(collection(db, "rooms", currentRoomId, "messages"), msgData);
+            try {
+                await addDoc(collection(db, "rooms", currentRoomId, "messages"), msgData);
+            } catch(e) { console.error(e); }
+            isSending = false;
         };
 
         function loadMessages() {
@@ -517,20 +475,11 @@
                     const isMine = d.uid === auth.currentUser.uid;
                     const div = document.createElement('div');
                     div.className = `msg-bubble ${isMine ? 'mine' : 'other'}`;
-                    
-                    // 追記：テキストかボイスかでコンテンツを分岐
-                    let contentHTML = '';
-                    if (d.voice) {
-                        contentHTML = `<audio src="${d.voice}" controls style="max-width:180px; height:30px;"></audio>`;
-                    } else {
-                        contentHTML = d.text;
-                    }
-
+                    let contentHTML = d.voice ? `<audio src="${d.voice}" controls style="max-width:180px; height:30px;"></audio>` : d.text;
                     div.innerHTML = `<div class="user-icon">${d.emoji}</div><div class="msg-content">${contentHTML}</div>`;
                     list.appendChild(div);
                 });
-                const area = document.getElementById('scroll-area');
-                area.scrollTop = area.scrollHeight;
+                scrollBottom();
             });
         }
 
@@ -545,11 +494,11 @@
             const rid = document.getElementById('join-id').value.trim();
             const pass = document.getElementById('join-pass').value.trim();
             if(!rid || !pass) return;
-            const rDoc = await getDoc(doc(db, "rooms", rid));
+            const rDoc = await getDoc(doc(doc(db, "rooms", rid)));
             if(rDoc.exists() && rDoc.data().pass === pass) {
                 await updateDoc(doc(db, "rooms", rid), { members: arrayUnion(auth.currentUser.uid) });
                 window.changeTab('home');
-            } else { alert("失敗"); }
+            } else alert("失敗");
         };
 
         window.toggleRoomMenu = async () => {
@@ -569,6 +518,7 @@
         };
 
         document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+        document.getElementById('chat-input').addEventListener('focus', scrollBottom);
     </script>
 </body>
 </html>
