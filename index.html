@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COMON COMON</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f9f9f9; color: #333; }
+        .view { display: none; padding: 20px; max-width: 500px; margin: 0 auto; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 15px; }
+        h1 { font-size: 24px; text-align: center; color: #1a1a1a; }
+        input, button, textarea { display: block; width: 100%; padding: 12px; margin: 10px 0; box-sizing: border-box; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; }
+        button { background: #007aff; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:active { opacity: 0.7; }
+        .secondary-btn { background: #8e8e93; }
+        .msg-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #eee; overflow: hidden; }
+        img, video { max-width: 100%; border-radius: 8px; margin-top: 5px; }
+        .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <div id="login-view" class="view">
+        <h1>COMON COMON</h1>
+        <div class="card">
+            <input type="email" id="email" placeholder="メールアドレス">
+            <input type="password" id="password" placeholder="パスワード">
+            <button onclick="login()">ログイン</button>
+            <button class="secondary-btn" onclick="signUp()">新規登録</button>
+        </div>
+    </div>
+
+    <div id="home-view" class="view">
+        <div class="nav-bar">
+            <h1>ホーム</h1>
+            <button onclick="logout()" style="width: auto; padding: 5px 10px;" class="secondary-btn">ログアウト</button>
+        </div>
+        <div class="card">
+            <button onclick="createRoom()">＋ 新しいルームを作る</button>
+        </div>
+        <p style="text-align: center; color: #888; font-size: 14px;">ルームを作るとURLが発行されます</p>
+    </div>
+
+    <div id="chat-view" class="view">
+        <div class="nav-bar">
+            <button onclick="location.hash=''" style="width: auto; padding: 5px 15px;" class="secondary-btn">← 戻る</button>
+            <h2 id="room-name-display" style="margin: 0; font-size: 18px;">チャット</h2>
+        </div>
+        <div id="msg-list"></div>
+        <div class="card" style="position: sticky; bottom: 20px;">
+            <input type="file" id="file-input" accept="image/*,video/*,audio/*">
+            <button onclick="sendFile()">ファイルをアップロード</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+        // Firebase設定
+        const firebaseConfig = {
+            apiKey: "AIzaSyAP_BaYs01oniLSPQ5EOPV-L177N0GkQss",
+            authDomain: "soshozi.firebaseapp.com",
+            projectId: "soshozi",
+            storageBucket: "soshozi.appspot.com",
+            messagingSenderId: "305374828131",
+            appId: "1:305374828131:web:8a54602f3a619070387532"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        // 画面切り替え
+        const showView = (id) => {
+            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+            document.getElementById(id).style.display = 'block';
+        };
+
+        // 認証
+        window.signUp = () => {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('password').value;
+            createUserWithEmailAndPassword(auth, e, p).then(() => alert("登録完了！")).catch(err => alert("エラー: " + err.message));
+        };
+        window.login = () => {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('password').value;
+            signInWithEmailAndPassword(auth, e, p).catch(err => alert("失敗: " + err.message));
+        };
+        window.logout = () => signOut(auth);
+
+        // ルーム作成
+        window.createRoom = async () => {
+            const name = prompt("ルーム名を入力してください");
+            if (!name) return;
+            const docRef = await addDoc(collection(db, "rooms"), {
+                name: name,
+                host: auth.currentUser.uid,
+                createdAt: Date.now()
+            });
+            location.hash = docRef.id; // URLの末尾にIDを付与
+        };
+
+        // ファイル送信
+        window.sendFile = async () => {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            const roomId = location.hash.substring(1);
+            if (!file || !roomId) return alert("ファイルを選択してください");
+
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerText = "送信中...";
+
+            try {
+                const storageRef = ref(storage, `rooms/${roomId}/${Date.now()}_${file.name}`);
+                const snapshot = await uploadBytes(storageRef, file);
+                const url = await getDownloadURL(snapshot.ref);
+
+                await addDoc(collection(db, `rooms/${roomId}/messages`), {
+                    uid: auth.currentUser.uid,
+                    type: file.type.split('/')[0],
+                    fileUrl: url,
+                    fileName: file.name,
+                    createdAt: Date.now()
+                });
+                fileInput.value = "";
+                alert("送信完了！");
+            } catch (e) {
+                alert("エラーが発生しました");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "ファイルをアップロード";
+            }
+        };
+
+        // 状態監視
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const roomId = location.hash.substring(1);
+                if (roomId) {
+                    showView('chat-view');
+                    loadMessages(roomId);
+                } else {
+                    showView('home-view');
+                }
+            } else {
+                showView('login-view');
+            }
+        });
+
+        // URLのハッシュが変わったらリロード
+        window.onhashchange = () => location.reload();
+
+        // メッセージ読み込み
+        function loadMessages(roomId) {
+            const q = query(collection(db, `rooms/${roomId}/messages`), orderBy("createdAt", "desc"));
+            onSnapshot(q, (snapshot) => {
+                const list = document.getElementById('msg-list');
+                list.innerHTML = "";
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const item = document.createElement('div');
+                    item.className = "msg-item";
+                    let content = `<p style="font-size:12px; color: #888;">ID: ${data.uid.substring(0,5)}</p>`;
+                    
+                    if (data.type === 'image') content += `<img src="${data.fileUrl}">`;
+                    else if (data.type === 'video') content += `<video src="${data.fileUrl}" controls></video>`;
+                    else if (data.type === 'audio') content += `<audio src="${data.fileUrl}" controls style="width:100%"></audio>`;
+                    else content += `<a href="${data.fileUrl}" target="_blank">📄 ${data.fileName}</a>`;
+                    
+                    item.innerHTML = content;
+                    list.appendChild(item);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
