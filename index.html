@@ -5,67 +5,96 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>COMON COMON</title>
     <style>
-        :root { --main-blue: #007aff; --bg-gray: #f0f2f5; }
-        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg-gray); color: #1c1e21; padding-bottom: 80px; }
-        .view { display: none; padding: 15px; max-width: 600px; margin: 0 auto; }
-        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        input, button { display: block; width: 100%; padding: 14px; margin: 10px 0; box-sizing: border-box; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; }
-        button { background: var(--main-blue); color: white; border: none; font-weight: bold; cursor: pointer; }
-        .secondary-btn { background: #8e8e93; }
+        :root { --main-blue: #007aff; --bg-gray: #f0f2f5; --sidebar-w: 250px; }
+        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg-gray); color: #1c1e21; overflow-x: hidden; }
         
-        /* トーク画面 */
-        #msg-list { display: flex; flex-direction: column-reverse; gap: 15px; }
+        /* サイドバー */
+        #sidebar { position: fixed; left: calc(var(--sidebar-w) * -1); top: 0; width: var(--sidebar-w); height: 100%; background: white; box-shadow: 2px 0 10px rgba(0,0,0,0.1); transition: 0.3s; z-index: 1000; padding: 20px; box-sizing: border-box; }
+        #sidebar.open { left: 0; }
+        .nav-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; }
+        .nav-item:hover { background: #f9f9f9; }
+
+        /* メインコンテンツ */
+        .main-content { transition: 0.3s; padding: 20px; padding-top: 60px; }
+        .header { position: fixed; top: 0; left: 0; right: 0; height: 50px; background: white; display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid #ddd; z-index: 900; }
+        .menu-btn { font-size: 24px; cursor: pointer; margin-right: 15px; }
+
+        .view { display: none; max-width: 600px; margin: 0 auto; }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        input, button, textarea { display: block; width: 100%; padding: 12px; margin: 10px 0; box-sizing: border-box; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; }
+        button { background: var(--main-blue); color: white; border: none; font-weight: bold; cursor: pointer; }
+        
+        /* チャットUI */
+        #msg-list { display: flex; flex-direction: column-reverse; gap: 15px; padding-bottom: 80px; }
         .msg-bubble { display: flex; align-items: flex-start; gap: 8px; max-width: 85%; }
         .msg-bubble.mine { align-self: flex-end; flex-direction: row-reverse; }
         .user-icon { width: 35px; height: 35px; border-radius: 50%; background: #ccc; object-fit: cover; flex-shrink: 0; }
-        .msg-content { background: white; padding: 10px 14px; border-radius: 18px; font-size: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .msg-content { background: white; padding: 10px; border-radius: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .mine .msg-content { background: var(--main-blue); color: white; }
-        .msg-img { max-width: 100%; border-radius: 10px; margin-top: 5px; display: block; }
+        .msg-img, .msg-video { max-width: 100%; border-radius: 8px; margin-top: 5px; }
+        .file-link { display: block; padding: 10px; background: #f0f0f0; border-radius: 8px; color: #333; text-decoration: none; font-size: 13px; margin-top: 5px; }
 
-        /* 入力バー */
-        .input-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 10px; display: flex; gap: 8px; border-top: 1px solid #ddd; z-index: 100; }
+        .input-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 10px; display: flex; gap: 8px; border-top: 1px solid #ddd; z-index: 800; }
+        #overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.3); z-index:999; }
     </style>
 </head>
 <body>
 
-    <div id="login-view" class="view">
-        <h1>COMON COMON</h1>
-        <div class="card">
-            <input type="email" id="email" placeholder="メールアドレス">
-            <input type="password" id="password" placeholder="パスワード">
-            <button onclick="login()">ログイン</button>
-            <button class="secondary-btn" onclick="signUp()">新規登録</button>
-        </div>
+    <div id="overlay" onclick="toggleMenu()"></div>
+
+    <div id="sidebar">
+        <div style="font-size: 20px; font-weight: bold; margin-bottom: 20px;">COMON MENU</div>
+        <div class="nav-item" onclick="changeTab('profile')">👤 プロフィール</div>
+        <div class="nav-item" onclick="changeTab('home')">💬 トークルーム</div>
+        <div class="nav-item" onclick="changeTab('memo')">📝 メモ帳</div>
+        <div class="nav-item" onclick="logout()" style="color:red; margin-top: 50px;">🚪 ログアウト</div>
     </div>
 
-    <div id="profile-view" class="view">
-        <h2>プロフィール設定</h2>
-        <div class="card">
-            <p>アイコン画像</p>
-            <input type="file" id="p-icon-input" accept="image/*">
-            <input type="text" id="p-name-input" placeholder="あなたの名前">
-            <button onclick="saveProfile()">保存して開始</button>
-        </div>
+    <div class="header">
+        <div class="menu-btn" onclick="toggleMenu()">☰</div>
+        <div id="header-title" style="font-weight:bold;">COMON COMON</div>
     </div>
 
-    <div id="home-view" class="view">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h2 id="welcome-msg">こんにちは</h2>
-            <button onclick="logout()" class="secondary-btn" style="width:auto; padding:5px 10px; font-size:12px;">ログアウト</button>
+    <div class="main-content">
+        <div id="login-view" class="view">
+            <div class="card">
+                <input type="email" id="email" placeholder="メールアドレス">
+                <input type="password" id="password" placeholder="パスワード">
+                <button onclick="login()">ログイン</button>
+                <button onclick="signUp()" style="background:#8e8e93">新規登録</button>
+            </div>
         </div>
-        <div class="card">
-            <button onclick="createRoom()">＋ 新しいトークルームを作る</button>
-        </div>
-        <div id="room-list"></div>
-    </div>
 
-    <div id="chat-view" class="view">
-        <button onclick="location.hash=''" class="secondary-btn" style="width:auto;">← 戻る</button>
-        <div id="msg-list" style="margin-top:20px;"></div>
-        <div class="input-bar">
-            <label style="background:#eee; padding:10px; border-radius:50%; cursor:pointer;">📸<input type="file" id="chat-file" style="display:none;" accept="image/*"></label>
-            <input type="text" id="chat-input" placeholder="メッセージ..." style="flex:1; margin:0; padding:10px;">
-            <button id="send-btn" onclick="sendMessage()" style="width:60px; margin:0;">送る</button>
+        <div id="profile-view" class="view">
+            <div class="card">
+                <h3>プロフィール設定</h3>
+                <input type="file" id="p-icon-input" accept="image/*">
+                <input type="text" id="p-name-input" placeholder="名前">
+                <button onclick="saveProfile()">保存する</button>
+            </div>
+        </div>
+
+        <div id="home-view" class="view">
+            <div class="card">
+                <button onclick="createRoom()">＋ ルーム新規作成</button>
+            </div>
+            <div id="room-list"></div>
+        </div>
+
+        <div id="memo-view" class="view">
+            <div class="card">
+                <h3>自分専用メモ</h3>
+                <textarea id="memo-input" rows="10" placeholder="ここにメモを入力...（自動保存されます）"></textarea>
+            </div>
+        </div>
+
+        <div id="chat-view" class="view">
+            <div id="msg-list"></div>
+            <div class="input-bar">
+                <label style="background:#eee; padding:10px; border-radius:50%; cursor:pointer;">📎<input type="file" id="chat-file" style="display:none;"></label>
+                <input type="text" id="chat-input" placeholder="メッセージ..." style="flex:1;">
+                <button id="send-btn" onclick="sendMessage()" style="width:60px;">送る</button>
+            </div>
         </div>
     </div>
 
@@ -91,110 +120,29 @@
 
         let userProfile = { name: "ゲスト", icon: "" };
 
-        const showView = (id) => {
-            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-            document.getElementById(id).style.display = 'block';
+        // メニュー開閉
+        window.toggleMenu = () => {
+            const sb = document.getElementById('sidebar');
+            const ol = document.getElementById('overlay');
+            sb.classList.toggle('open');
+            ol.style.display = sb.classList.contains('open') ? 'block' : 'none';
         };
 
+        window.changeTab = (tab) => {
+            if(tab === 'profile') location.hash = "profile";
+            else if(tab === 'home') location.hash = "";
+            else if(tab === 'memo') location.hash = "memo";
+            toggleMenu();
+        };
+
+        const showView = (id) => {
+            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+            const target = document.getElementById(id);
+            if(target) target.style.display = 'block';
+        };
+
+        // 認証
         window.signUp = () => {
             const e = document.getElementById('email').value;
             const p = document.getElementById('password').value;
-            createUserWithEmailAndPassword(auth, e, p).then(() => showView('profile-view')).catch(err => alert(err.message));
-        };
-        window.login = () => {
-            const e = document.getElementById('email').value;
-            const p = document.getElementById('password').value;
-            signInWithEmailAndPassword(auth, e, p).catch(err => alert(err.message));
-        };
-        window.logout = () => signOut(auth);
-
-        window.saveProfile = async () => {
-            const name = document.getElementById('p-name-input').value;
-            const file = document.getElementById('p-icon-input').files[0];
-            let iconUrl = "";
-            if (file) {
-                const sRef = ref(storage, `users/${auth.currentUser.uid}/icon`);
-                await uploadBytes(sRef, file);
-                iconUrl = await getDownloadURL(sRef);
-            }
-            await setDoc(doc(db, "users", auth.currentUser.uid), { name: name || "名無し", icon: iconUrl });
-            location.reload();
-        };
-
-        onAuthStateChanged(auth, async user => {
-            if (user) {
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists()) {
-                    userProfile = userDoc.data();
-                    document.getElementById('welcome-msg').innerText = `こんにちは、${userProfile.name}さん`;
-                    const rid = location.hash.substring(1);
-                    rid ? (showView('chat-view'), loadMessages(rid)) : (showView('home-view'), loadRooms());
-                } else { showView('profile-view'); }
-            } else { showView('login-view'); }
-        });
-
-        window.createRoom = async () => {
-            const name = prompt("ルーム名");
-            if (!name) return;
-            const docRef = await addDoc(collection(db, "rooms"), { name, host: auth.currentUser.uid, createdAt: Date.now() });
-            location.hash = docRef.id;
-        };
-
-        window.sendMessage = async () => {
-            const text = document.getElementById('chat-input').value;
-            const file = document.getElementById('chat-file').files[0];
-            const rid = location.hash.substring(1);
-            if (!text && !file) return;
-
-            const btn = document.getElementById('send-btn');
-            btn.disabled = true;
-            let fileUrl = "";
-            if (file) {
-                const sRef = ref(storage, `rooms/${rid}/${Date.now()}_${file.name}`);
-                await uploadBytes(sRef, file);
-                fileUrl = await getDownloadURL(sRef);
-            }
-            await addDoc(collection(db, `rooms/${rid}/messages`), {
-                uid: auth.currentUser.uid, name: userProfile.name, icon: userProfile.icon,
-                text, fileUrl, createdAt: Date.now()
-            });
-            document.getElementById('chat-input').value = "";
-            document.getElementById('chat-file').value = "";
-            btn.disabled = false;
-        };
-
-        function loadRooms() {
-            onSnapshot(query(collection(db, "rooms"), orderBy("createdAt", "desc")), s => {
-                const list = document.getElementById('room-list');
-                list.innerHTML = "<h4>ルーム一覧</h4>";
-                s.forEach(d => {
-                    list.innerHTML += `<div class="card"><b>${d.data().name}</b><button onclick="location.hash='${d.id}'">入る</button></div>`;
-                });
-            });
-        }
-
-        function loadMessages(rid) {
-            onSnapshot(query(collection(db, `rooms/${rid}/messages`), orderBy("createdAt", "desc")), s => {
-                const list = document.getElementById('msg-list');
-                list.innerHTML = "";
-                s.forEach(d => {
-                    const data = d.data();
-                    const isMine = data.uid === auth.currentUser.uid;
-                    const item = document.createElement('div');
-                    item.className = `msg-bubble ${isMine ? 'mine' : ''}`;
-                    item.innerHTML = `
-                        <img src="${data.icon || 'https://via.placeholder.com/50'}" class="user-icon">
-                        <div class="msg-content">
-                            <div style="font-size:10px; opacity:0.6;">${data.name}</div>
-                            ${data.text ? `<div>${data.text}</div>` : ''}
-                            ${data.fileUrl ? `<img src="${data.fileUrl}" class="msg-img" onclick="window.open('${data.fileUrl}')">` : ''}
-                        </div>
-                    `;
-                    list.appendChild(item);
-                });
-            });
-        }
-        window.addEventListener('hashchange', () => location.reload());
-    </script>
-</body>
-</html>
+            createUserWithEmail
