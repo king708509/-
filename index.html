@@ -67,12 +67,12 @@
         .seek-bar { flex: 1; height: 3px; -webkit-appearance: none; background: rgba(255,255,255,0.25); outline: none; border-radius: 2px; }
         .seek-bar::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: #fff; border-radius: 50%; box-shadow: 0 0 4px rgba(0,0,0,0.3); }
 
-        /* チャット入力バー */
-        .input-bar { position: fixed; bottom: calc(65px + env(safe-area-inset-bottom)); left: 0; right: 0; background: var(--bg-main); padding: 10px 15px; border-top: 0.5px solid var(--border); z-index: 200; }
+        /* チャット入力バー (修正済み) */
+        .input-bar { position: fixed; bottom: calc(65px + env(safe-area-inset-bottom)); left: 0; right: 0; background: var(--bg-main); padding: 10px 15px; border-top: 0.5px solid var(--border); z-index: 200; display: none; }
         .input-box-wrapper { background: var(--bg-input); border-radius: 22px; display: flex; align-items: center; padding: 0 15px; flex: 1; }
         .input-box-wrapper input { background: none; border: none; color: #fff; flex: 1; padding: 10px 0; outline: none; font-size: 16px; font-family: inherit; }
 
-        /* タブバー (質素かつ本格的) */
+        /* タブバー */
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(65px + env(safe-area-inset-bottom)); background: var(--bg-card); border-top: 0.5px solid var(--border); display: flex; z-index: 300; }
         .tab-item { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 11px; font-weight: 700; cursor: pointer; flex-direction: column; gap: 4px; transition: color 0.2s; }
         .tab-item.active { color: #fff; }
@@ -92,7 +92,6 @@
         input.base-input { background: var(--bg-card); border: 0.5px solid var(--border); color: #fff; padding: 15px; border-radius: 12px; width: 100%; box-sizing: border-box; margin-bottom: 15px; font-size: 16px; outline: none; transition: border 0.2s; }
         input.base-input:focus { border-color: var(--my-blue); }
         button.action-btn { background: var(--my-blue); color: #fff; border: none; padding: 16px; border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; transition: opacity 0.2s; }
-        button.action-btn:active { opacity: 0.8; }
     </style>
 </head>
 <body>
@@ -155,7 +154,7 @@
                     <div class="section-label">USER PROFILE</div>
                     <div class="form-padding">
                         <input type="text" id="p-name" class="base-input" placeholder="表示名">
-                        <input type="text" id="p-emoji" class="base-input" placeholder="アイコン絵文字 (例: 🐺)">
+                        <input type="text" id="p-emoji" class="base-input" placeholder="アイコン絵文字">
                         <button class="action-btn" onclick="updateProfile()">設定を保存</button>
                         <button onclick="logout()" style="background:none; color:#ff3b30; border:none; margin-top:50px; width:100%; font-weight:700; font-size:14px; letter-spacing:1px;">ログアウト</button>
                     </div>
@@ -177,7 +176,7 @@
             </div>
         </div>
 
-        <div class="input-bar" id="bottom-bar" style="display:none;">
+        <div class="input-bar" id="bottom-bar">
             <div id="normal-input" style="display: flex; gap: 15px; align-items: center;">
                 <div style="cursor:pointer; font-size:24px; filter: grayscale(1);" onclick="startRecording()">🎤</div>
                 <div class="input-box-wrapper"><input type="text" id="chat-input" placeholder="メッセージを入力..."></div>
@@ -189,7 +188,6 @@
                 <div onclick="finishRecording()" style="color:var(--my-blue); font-weight:900; font-size:14px;">録音を送信</div>
             </div>
         </div>
-        <style>@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }</style>
 
         <div class="tab-bar" id="nav-tabs">
             <div class="tab-item active" id="tab-home" onclick="changeTab('home')"><span>トーク</span></div>
@@ -209,20 +207,17 @@
         let userProfile = null, audioCtx = null, unsubMsg = null, authMode = 'login', currentRoomId = null;
         let mediaRecorder = null, audioChunks = [], micStream = null, lastMsgTime = 0;
 
-        // 全機種対応MIME (一切の簡略化禁止)
         const getSupportedMimeType = () => {
-            const types = ["audio/mp4", "audio/aac", "audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"];
+            const types = ["audio/mp4", "audio/aac", "audio/webm;codecs=opus", "audio/webm"];
             for (let t of types) { if (MediaRecorder.isTypeSupported(t)) return t; }
             return "";
         };
 
-        // 効果音生成ロジック (一切の簡略化禁止)
         const playPopSound = (isSend) => {
             if(!audioCtx) return;
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = 'sine';
             osc.frequency.setValueAtTime(isSend ? 880 : 660, now);
             osc.frequency.exponentialRampToValueAtTime(100, now + 0.12);
             gain.gain.setValueAtTime(0, now);
@@ -232,72 +227,51 @@
             osc.start(); osc.stop(now + 0.15);
         };
 
-        // 演出シークエンス (一切の簡略化禁止)
         window.startSequence = () => {
             if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             document.getElementById('enable-screen').style.display = 'none';
             document.getElementById('loading-container').style.display = 'block';
             let progress = 0; 
             const interval = setInterval(() => {
-                progress += Math.floor(Math.random() * 15) + 5;
-                if(progress > 100) progress = 100;
+                progress += 10;
                 document.getElementById('loading-fill').style.width = progress + '%';
                 if(progress >= 100) { clearInterval(interval); setTimeout(runSplash, 300); }
-            }, 80);
+            }, 60);
         };
         const runSplash = () => {
             document.getElementById('loading-container').style.display = 'none';
             const sp = document.getElementById('splash-screen'); sp.style.display = 'flex';
             document.getElementById('splash-logo').classList.add('animate-logo');
-            
-            // イントロ低音 (一切の削除禁止)
             const now = audioCtx.currentTime;
-            const g = audioCtx.createGain(); 
-            g.gain.setValueAtTime(0, now); 
-            g.gain.linearRampToValueAtTime(0.25, now + 0.6); 
-            g.gain.linearRampToValueAtTime(0, now + 2.6);
-            const o = audioCtx.createOscillator(); 
-            o.type = 'sine';
-            o.frequency.setValueAtTime(55, now); 
-            o.frequency.exponentialRampToValueAtTime(20, now + 2.6);
+            const g = audioCtx.createGain(); g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.2, now + 0.5); g.gain.linearRampToValueAtTime(0, now + 2.5);
+            const o = audioCtx.createOscillator(); o.frequency.setValueAtTime(55, now); o.frequency.exponentialRampToValueAtTime(20, now + 2.5);
             o.connect(g); g.connect(audioCtx.destination); o.start(now); o.stop(now + 2.8);
-            
             setTimeout(() => { sp.style.display = 'none'; document.getElementById('app-body').style.display = 'flex'; checkUserStatus(); }, 2800);
         };
 
-        // 認証ロジック
         window.toggleAuthMode = () => {
             authMode = (authMode === 'login' ? 'signup' : 'login');
-            document.getElementById('auth-btn-text').innerText = (authMode === 'login' ? 'ログイン' : '新規登録を実行');
-            document.getElementById('auth-toggle-msg').innerText = (authMode === 'login' ? '新規アカウント作成はこちら' : '既にアカウントをお持ちの方はこちら');
+            document.getElementById('auth-btn-text').innerText = (authMode === 'login' ? 'ログイン' : '新規登録');
+            document.getElementById('auth-toggle-msg').innerText = (authMode === 'login' ? '新規アカウント作成はこちら' : 'ログインはこちら');
         };
         window.handleAuth = async () => {
             const e = document.getElementById('auth-email').value, p = document.getElementById('auth-password').value;
-            if(!e || !p) return alert("情報を入力してください");
-            try { 
-                if(authMode==='login') await signInWithEmailAndPassword(auth, e, p); 
-                else await createUserWithEmailAndPassword(auth, e, p); 
-            } catch(err) { alert("認証エラー: " + err.message); }
+            try { if(authMode==='login') await signInWithEmailAndPassword(auth, e, p); else await createUserWithEmailAndPassword(auth, e, p); } catch(err) { alert(err.message); }
         };
 
-        // 【修正】ユーザー監視とガード処理 (一切の簡略化禁止)
         const checkUserStatus = () => {
             onAuthStateChanged(auth, async user => {
                 if (user) {
                     const uDoc = await getDoc(doc(db, "users", user.uid));
                     if (uDoc.exists() && uDoc.data().name) { 
                         userProfile = uDoc.data(); 
-                        document.getElementById('p-name').value = userProfile.name;
-                        document.getElementById('p-emoji').value = userProfile.emoji;
                         applySecurityGuard(false);
                         changeTab('home'); 
                     } else { 
-                        // ログイン中だが名前がない
                         applySecurityGuard(true);
                         showView('profile-view'); 
                     }
                 } else { 
-                    // 未ログイン
                     applySecurityGuard(true);
                     showView('login-view'); 
                 }
@@ -307,14 +281,10 @@
         const applySecurityGuard = (isLocked) => {
             const contentDisplay = isLocked ? 'none' : 'block';
             const guardDisplay = isLocked ? 'block' : 'none';
-
-            // ホーム・メモのガード
             document.getElementById('home-content').style.display = contentDisplay;
             document.getElementById('guard-home').style.display = guardDisplay;
             document.getElementById('memo-content').style.display = contentDisplay;
             document.getElementById('guard-memo').style.display = guardDisplay;
-            
-            // プロフィールのガード（ログインさえしていれば入力フォームは出す）
             if (auth.currentUser) {
                 document.getElementById('profile-content').style.display = 'block';
                 document.getElementById('guard-profile').style.display = 'none';
@@ -326,20 +296,16 @@
             }
         };
 
-        // タブ切り替えロジック
         window.changeTab = (t) => {
             currentRoomId = (t !== 'home' && t !== 'memo' && t !== 'profile') ? t : null;
             document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
-            document.getElementById(`tab-${t === 'home' || t === 'memo' || t === 'profile' ? t : 'home'}`).classList.add('active');
+            const activeTab = document.getElementById(`tab-${t === 'home' || t === 'memo' || t === 'profile' ? t : 'home'}`);
+            if(activeTab) activeTab.classList.add('active');
             
             document.getElementById('bottom-bar').style.display = 'none';
             document.getElementById('header-action').style.display = 'none';
 
-            if (!auth.currentUser && t !== 'profile') {
-                showView('login-view');
-                document.getElementById('view-title').innerText = "LOGIN";
-                return;
-            }
+            if (!auth.currentUser && t !== 'profile') { showView('login-view'); return; }
 
             if(t === 'home') { showView('home-view'); loadRooms(); document.getElementById('view-title').innerText = "トーク一覧"; }
             else if(t === 'memo') { showView('memo-view'); loadMemoData(); document.getElementById('view-title').innerText = "メモ"; }
@@ -355,7 +321,6 @@
 
         const showView = (id) => { document.querySelectorAll('.view').forEach(v => v.style.display = 'none'); document.getElementById(id).style.display = 'block'; };
 
-        // 録音・ボイメ (全機能保持)
         window.startRecording = async () => {
             try {
                 micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -365,10 +330,10 @@
                 mediaRecorder.start();
                 document.getElementById('normal-input').style.display = 'none';
                 document.getElementById('recording-input').style.display = 'flex';
-            } catch (e) { alert("マイクの許可が必要です。"); }
+            } catch (e) { alert("マイク不可"); }
         };
-        const stopMicTracks = () => { if(micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; } document.getElementById('normal-input').style.display = 'flex'; document.getElementById('recording-input').style.display = 'none'; };
-        window.cancelRecording = () => { if(mediaRecorder) mediaRecorder.stop(); stopMicTracks(); };
+        const stopMic = () => { if(micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; } document.getElementById('normal-input').style.display = 'flex'; document.getElementById('recording-input').style.display = 'none'; };
+        window.cancelRecording = () => { if(mediaRecorder) mediaRecorder.stop(); stopMic(); };
         window.finishRecording = () => {
             if(!mediaRecorder) return;
             mediaRecorder.onstop = async () => {
@@ -378,7 +343,7 @@
                     await addDoc(collection(db, `rooms/${currentRoomId}/messages`), { uid: auth.currentUser.uid, name: userProfile.name, emoji: userProfile.emoji, voiceData: reader.result, createdAt: Date.now() });
                     playPopSound(true);
                 };
-                stopMicTracks();
+                stopMic();
             };
             mediaRecorder.stop();
         };
@@ -393,19 +358,13 @@
             window[`seekVoice_${id}`] = (v) => audio.currentTime = v;
         };
 
-        // メッセージ・ルーム処理
         window.sendMessage = async () => {
             const input = document.getElementById('chat-input'); if(!input.value.trim() || !currentRoomId) return;
             await addDoc(collection(db, `rooms/${currentRoomId}/messages`), { uid: auth.currentUser.uid, name: userProfile.name, emoji: userProfile.emoji, text: input.value.trim(), createdAt: Date.now() });
             input.value = ""; playPopSound(true);
         };
 
-        const loadRooms = () => { 
-            onSnapshot(query(collection(db, "rooms"), where("members", "array-contains", auth.currentUser.uid)), s => { 
-                const list = document.getElementById('room-list'); list.innerHTML = ""; 
-                s.forEach(d => { list.innerHTML += `<div class="list-item" onclick="changeTab('${d.id}')"><div class="list-info"><div class="list-name">${d.data().name}</div><div class="list-id">ROOM ID: ${d.id}</div></div><div class="list-arrow">›</div></div>`; }); 
-            }); 
-        };
+        const loadRooms = () => { onSnapshot(query(collection(db, "rooms"), where("members", "array-contains", auth.currentUser.uid)), s => { const list = document.getElementById('room-list'); list.innerHTML = ""; s.forEach(d => { list.innerHTML += `<div class="list-item" onclick="changeTab('${d.id}')"><div class="list-info"><div class="list-name">${d.data().name}</div><div class="list-id">ID: ${d.id}</div></div><div class="list-arrow">›</div></div>`; }); }); };
 
         function loadMessages(rid) {
             if(unsubMsg) unsubMsg();
@@ -417,8 +376,7 @@
                     if (!isMine && data.createdAt > lastMsgTime) { playPopSound(false); lastMsgTime = data.createdAt; }
                     let content = data.text || "";
                     if(data.voiceData) {
-                        const vid = d.id;
-                        content = `<div class="voice-player"><button id="btn-${vid}" class="play-btn" onclick="playVoice_${vid}()">▶️</button><input id="seek-${vid}" type="range" class="seek-bar" value="0" oninput="seekVoice_${vid}(this.value)"></div>`;
+                        const vid = d.id; content = `<div class="voice-player"><button id="btn-${vid}" class="play-btn" onclick="playVoice_${vid}()">▶️</button><input id="seek-${vid}" type="range" class="seek-bar" value="0" oninput="seekVoice_${vid}(this.value)"></div>`;
                         setTimeout(() => initVoicePlayer(vid, data.voiceData), 50);
                     }
                     list.innerHTML += `<div class="msg-bubble ${isMine ? 'mine' : 'other'}"><div class="user-icon">${data.emoji || '👤'}</div><div class="msg-content">${content}</div></div>`;
@@ -427,17 +385,13 @@
             });
         }
 
-        // メモ保存
         const loadMemoData = async () => { const m = await getDoc(doc(db, "memos", auth.currentUser.uid)); if(m.exists()) document.getElementById('memo-input').value = m.data().text; };
         document.getElementById('memo-input').oninput = async (e) => { if(auth.currentUser) await setDoc(doc(db, "memos", auth.currentUser.uid), { text: e.target.value }); };
 
-        // 共通機能
-        window.openModal = (t, d, c, f) => { document.getElementById('modal-title').innerText = t; document.getElementById('modal-desc').innerText = d; document.getElementById('modal-confirm-btn').innerText = c; document.getElementById('modal-confirm-btn').onclick = () => { f(); closeModal(); }; document.getElementById('custom-modal').style.display = 'flex'; };
-        window.closeModal = () => document.getElementById('custom-modal').style.display = 'none';
         window.logout = () => signOut(auth).then(() => location.reload());
         window.updateProfile = async () => {
             const n = document.getElementById('p-name').value, e = document.getElementById('p-emoji').value;
-            if(!n) return alert("名前は必ず入力してください");
+            if(!n) return alert("名前は必須です");
             await setDoc(doc(db, "users", auth.currentUser.uid), {name:n, emoji:e}, {merge:true});
             location.reload(); 
         };
@@ -445,23 +399,25 @@
             const rid = document.getElementById('join-id').value.toUpperCase().trim(), pass = document.getElementById('join-pass').value.trim();
             if(!rid || !pass) return;
             const rDoc = await getDoc(doc(db, "rooms", rid));
-            if(rDoc.exists() && rDoc.data().password === pass) { await updateDoc(doc(db, "rooms", rid), { members: arrayUnion(auth.currentUser.uid) }); changeTab(rid); } else { alert("ルームが見つからないか、パスワードが違います"); }
+            if(rDoc.exists() && rDoc.data().password === pass) { await updateDoc(doc(db, "rooms", rid), { members: arrayUnion(auth.currentUser.uid) }); changeTab(rid); } else { alert("失敗"); }
         };
         window.createRoom = () => {
-            const n = prompt("ルーム名を入力してください"); if(!n) return;
-            const p = prompt("6桁のパスワードを設定してください", "000000"); if(!p || p.length !== 6) return;
+            const n = prompt("ルーム名"); if(!n) return;
+            const p = prompt("6桁パスワード", "000000"); if(!p || p.length !== 6) return;
             const rid = Math.random().toString(36).substring(2, 8).toUpperCase();
             setDoc(doc(db, "rooms", rid), { name: n, password: p, host: auth.currentUser.uid, members: [auth.currentUser.uid], createdAt: Date.now() }).then(() => changeTab(rid));
         };
         window.showRoomMenu = async () => {
             const rDoc = await getDoc(doc(db, "rooms", currentRoomId));
             const isHost = rDoc.data().host === auth.currentUser.uid;
-            openModal(isHost ? "ルームを削除" : "ルームを退出", isHost ? "このルームと全てのログを完全に消去しますか？" : "このルームから退出しますか？", isHost ? "削除実行" : "退出実行", async () => {
+            openModal(isHost ? "削除" : "退出", isHost ? "消しますか？" : "出ますか？", "実行", async () => {
                 if(isHost) await deleteDoc(doc(db, "rooms", currentRoomId));
                 else await updateDoc(doc(db, "rooms", currentRoomId), { members: arrayRemove(auth.currentUser.uid) });
                 changeTab('home');
             });
         };
+        window.openModal = (t, d, c, f) => { document.getElementById('modal-title').innerText = t; document.getElementById('modal-desc').innerText = d; document.getElementById('modal-confirm-btn').innerText = c; document.getElementById('modal-confirm-btn').onclick = () => { f(); closeModal(); }; document.getElementById('custom-modal').style.display = 'flex'; };
+        window.closeModal = () => document.getElementById('custom-modal').style.display = 'none';
     </script>
 </body>
 </html>
