@@ -9,13 +9,12 @@
         .view { display: none; padding: 20px; max-width: 500px; margin: 0 auto; }
         .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 15px; }
         h1 { font-size: 24px; text-align: center; color: #1a1a1a; }
-        input, button, textarea { display: block; width: 100%; padding: 12px; margin: 10px 0; box-sizing: border-box; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; }
-        button { background: #007aff; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        input, button { display: block; width: 100%; padding: 12px; margin: 10px 0; box-sizing: border-box; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; }
+        button { background: #007aff; color: white; border: none; font-weight: bold; cursor: pointer; }
         button:active { opacity: 0.7; }
         .secondary-btn { background: #8e8e93; }
-        .msg-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #eee; overflow: hidden; }
+        .msg-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #eee; }
         img, video { max-width: 100%; border-radius: 8px; margin-top: 5px; }
-        .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -31,32 +30,26 @@
     </div>
 
     <div id="home-view" class="view">
-        <div class="nav-bar">
-            <h1>ホーム</h1>
-            <button onclick="logout()" style="width: auto; padding: 5px 10px;" class="secondary-btn">ログアウト</button>
-        </div>
+        <h1>ホーム</h1>
         <div class="card">
             <button onclick="createRoom()">＋ 新しいルームを作る</button>
+            <button class="secondary-btn" onclick="logout()">ログアウト</button>
         </div>
-        <p style="text-align: center; color: #888; font-size: 14px;">ルームを作るとURLが発行されます</p>
     </div>
 
     <div id="chat-view" class="view">
-        <div class="nav-bar">
-            <button onclick="location.hash=''" style="width: auto; padding: 5px 15px;" class="secondary-btn">← 戻る</button>
-            <h2 id="room-name-display" style="margin: 0; font-size: 18px;">チャット</h2>
-        </div>
-        <div id="msg-list"></div>
+        <button onclick="location.hash=''" class="secondary-btn">← 戻る</button>
+        <div id="msg-list" style="margin-top: 20px;"></div>
         <div class="card" style="position: sticky; bottom: 20px;">
             <input type="file" id="file-input" accept="image/*,video/*,audio/*">
-            <button onclick="sendFile()">ファイルをアップロード</button>
+            <button id="send-btn" onclick="sendFile()">ファイルを送信</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
         // Firebase設定
@@ -74,106 +67,73 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        // 画面切り替え
         const showView = (id) => {
             document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
             document.getElementById(id).style.display = 'block';
         };
 
-        // 認証
         window.signUp = () => {
             const e = document.getElementById('email').value;
             const p = document.getElementById('password').value;
             createUserWithEmailAndPassword(auth, e, p).then(() => alert("登録完了！")).catch(err => alert("エラー: " + err.message));
         };
+
         window.login = () => {
             const e = document.getElementById('email').value;
             const p = document.getElementById('password').value;
             signInWithEmailAndPassword(auth, e, p).catch(err => alert("失敗: " + err.message));
         };
+
         window.logout = () => signOut(auth);
 
-        // ルーム作成
         window.createRoom = async () => {
-            const name = prompt("ルーム名を入力してください");
+            const name = prompt("ルーム名を入力");
             if (!name) return;
-            const docRef = await addDoc(collection(db, "rooms"), {
-                name: name,
-                host: auth.currentUser.uid,
-                createdAt: Date.now()
-            });
-            location.hash = docRef.id; // URLの末尾にIDを付与
+            const docRef = await addDoc(collection(db, "rooms"), { name, host: auth.currentUser.uid, createdAt: Date.now() });
+            location.hash = docRef.id;
         };
 
-        // ファイル送信
         window.sendFile = async () => {
-            const fileInput = document.getElementById('file-input');
-            const file = fileInput.files[0];
+            const file = document.getElementById('file-input').files[0];
             const roomId = location.hash.substring(1);
-            if (!file || !roomId) return alert("ファイルを選択してください");
+            if (!file || !roomId) return alert("ファイルを選んでね");
 
-            const btn = event.target;
-            btn.disabled = true;
-            btn.innerText = "送信中...";
+            const btn = document.getElementById('send-btn');
+            btn.disabled = true; btn.innerText = "送信中...";
 
             try {
-                const storageRef = ref(storage, `rooms/${roomId}/${Date.now()}_${file.name}`);
-                const snapshot = await uploadBytes(storageRef, file);
-                const url = await getDownloadURL(snapshot.ref);
-
-                await addDoc(collection(db, `rooms/${roomId}/messages`), {
-                    uid: auth.currentUser.uid,
-                    type: file.type.split('/')[0],
-                    fileUrl: url,
-                    fileName: file.name,
-                    createdAt: Date.now()
-                });
-                fileInput.value = "";
+                const sRef = ref(storage, `rooms/${roomId}/${Date.now()}_${file.name}`);
+                await uploadBytes(sRef, file);
+                const url = await getDownloadURL(sRef);
+                await addDoc(collection(db, `rooms/${roomId}/messages`), { uid: auth.currentUser.uid, type: file.type.split('/')[0], fileUrl: url, fileName: file.name, createdAt: Date.now() });
                 alert("送信完了！");
-            } catch (e) {
-                alert("エラーが発生しました");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "ファイルをアップロード";
-            }
+            } catch (e) { alert("送信エラー"); } finally { btn.disabled = false; btn.innerText = "ファイルを送信"; }
         };
 
-        // 状態監視
-        onAuthStateChanged(auth, async (user) => {
+        onAuthStateChanged(auth, user => {
             if (user) {
-                const roomId = location.hash.substring(1);
-                if (roomId) {
-                    showView('chat-view');
-                    loadMessages(roomId);
-                } else {
-                    showView('home-view');
-                }
-            } else {
-                showView('login-view');
-            }
+                const rid = location.hash.substring(1);
+                rid ? (showView('chat-view'), loadMessages(rid)) : showView('home-view');
+            } else { showView('login-view'); }
         });
 
-        // URLのハッシュが変わったらリロード
         window.onhashchange = () => location.reload();
 
-        // メッセージ読み込み
-        function loadMessages(roomId) {
-            const q = query(collection(db, `rooms/${roomId}/messages`), orderBy("createdAt", "desc"));
-            onSnapshot(q, (snapshot) => {
+        function loadMessages(rid) {
+            const q = query(collection(db, `rooms/${rid}/messages`), orderBy("createdAt", "desc"));
+            onSnapshot(q, s => {
                 const list = document.getElementById('msg-list');
                 list.innerHTML = "";
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
+                s.forEach(d => {
+                    const data = d.data();
                     const item = document.createElement('div');
                     item.className = "msg-item";
-                    let content = `<p style="font-size:12px; color: #888;">ID: ${data.uid.substring(0,5)}</p>`;
-                    
-                    if (data.type === 'image') content += `<img src="${data.fileUrl}">`;
-                    else if (data.type === 'video') content += `<video src="${data.fileUrl}" controls></video>`;
-                    else if (data.type === 'audio') content += `<audio src="${data.fileUrl}" controls style="width:100%"></audio>`;
-                    else content += `<a href="${data.fileUrl}" target="_blank">📄 ${data.fileName}</a>`;
-                    
-                    item.innerHTML = content;
+                    let html = `<small>ID: ${data.uid.slice(0,5)}</small><br>`;
+                    if (data.type === 'image') html += `<img src="${data.fileUrl}">`;
+                    else if (data.type === 'video') html += `<video src="${data.fileUrl}" controls></video>`;
+                    else if (data.type === 'audio') html += `<audio src="${data.fileUrl}" controls style="width:100%"></audio>`;
+                    else html += `<a href="${data.fileUrl}" target="_blank">${data.fileName}</a>`;
+                    item.innerHTML = html;
                     list.appendChild(item);
                 });
             });
