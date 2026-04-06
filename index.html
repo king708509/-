@@ -36,6 +36,15 @@
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         #audio-list audio { width: 100%; height: 35px; margin-top: 10px; }
 
+        /* 追加: ボイスメッセージ用スタイル */
+        .voice-msg-btn { font-size: 24px; cursor: pointer; user-select: none; transition: color 0.2s; }
+        .voice-msg-btn.active { color: var(--error-red); animation: pulse 1s infinite; }
+        .voice-rec-panel { display: none; position: absolute; left: 0; right: 0; background: var(--bg-input); padding: 10px 20px; border-radius: 22px; align-items: center; justify-content: space-between; z-index: 1100; }
+        .voice-rec-panel.show { display: flex; }
+        .voice-timer { color: var(--error-red); font-weight: 700; font-size: 14px; }
+        .voice-cancel { color: var(--text-muted); font-size: 14px; cursor: pointer; }
+        .voice-send { color: var(--my-blue); font-weight: 900; cursor: pointer; }
+
         /* タブバー */
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(65px + env(safe-area-inset-bottom)); background: var(--bg-card); border-top: 0.5px solid var(--border); display: flex; z-index: 1000; }
         .tab-item { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 11px; font-weight: 700; flex-direction: column; }
@@ -54,11 +63,30 @@
         .menu-sheet { background: var(--bg-card); width: 100%; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 20px 0 calc(20px + env(safe-area-inset-bottom)); }
         .menu-item { padding: 18px 25px; border-bottom: 0.5px solid var(--border); font-size: 16px; display: flex; justify-content: space-between; }
         .danger { color: var(--error-red); }
+
+        /* 追加: イントロ & ローディング演出 */
+        #loader-screen { position: fixed; inset: 0; background: #000; display: none; align-items: center; justify-content: center; z-index: 11000; }
+        .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        #intro-screen { position: fixed; inset: 0; background: #000; display: none; align-items: center; justify-content: center; z-index: 12000; overflow: hidden; }
+        #intro-text { font-size: 55px; font-weight: 900; color: #ff3b30; letter-spacing: 12px; transform: scale(0.8); opacity: 0; filter: blur(10px); }
+        .animate-intro #intro-text { animation: netflix-style 3.5s cubic-bezier(0.21, 0.6, 0.35, 1) forwards; }
+        @keyframes netflix-style { 
+            0% { transform: scale(0.6); opacity: 0; filter: blur(20px); } 
+            25% { opacity: 1; filter: blur(0px); } 
+            75% { transform: scale(1.1); opacity: 1; filter: blur(0px); } 
+            100% { transform: scale(1.4); opacity: 0; filter: blur(5px); } 
+        }
     </style>
 </head>
 <body>
 
     <div id="enable-screen"><button id="enable-btn" onclick="startSequence()">ENABLE START</button></div>
+
+    <div id="loader-screen"><div class="spinner"></div></div>
+
+    <div id="intro-screen"><div id="intro-text">COMMON</div></div>
 
     <div id="app-body">
         <div class="header">
@@ -118,8 +146,16 @@
         </div>
 
         <div class="input-bar" id="bottom-bar">
+            <div id="voice-msg-trigger" class="voice-msg-btn" onclick="startVoiceMsgMode()">🎤</div>
             <div class="file-btn" onclick="openGigaFile()" title="ファイル送信">📎</div>
-            <div class="input-box-wrapper"><input type="text" id="chat-input" placeholder="メッセージ..."></div>
+            <div class="input-box-wrapper">
+                <input type="text" id="chat-input" placeholder="メッセージ...">
+                <div id="voice-rec-panel" class="voice-rec-panel">
+                    <div class="voice-timer" id="voice-timer">REC 00:00</div>
+                    <div class="voice-cancel" onclick="cancelVoiceMsg()">キャンセル</div>
+                    <div class="voice-send" onclick="stopAndSendVoiceMsg()">送信</div>
+                </div>
+            </div>
             <div id="send-btn" onclick="sendMessage()" style="color:var(--my-blue); font-weight:900; cursor:pointer; padding:10px 0 10px 5px;">送信</div>
         </div>
 
@@ -158,6 +194,12 @@
         let authMode = 'login';
         let mediaRecorder;
         let audioChunks = [];
+
+        // 追記：ボイスメッセージ用変数
+        let msgRecorder;
+        let msgChunks = [];
+        let recInterval;
+        let recSeconds = 0;
 
         // ユーザー情報をUIにロードする関数
         const loadUserProfile = async (user) => {
@@ -242,11 +284,141 @@
             }
         };
 
-        window.startSequence = () => {
+        // --- 追記：ボイスメッセージ機能ロジック ---
+        window.startVoiceMsgMode = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                // 全機種互換性のためのMIMEタイプ設定（ブラウザが対応しているものを優先。WebM/AACなど）
+                const options = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+                                ? { mimeType: 'audio/webm;codecs=opus' } 
+                                : { mimeType: 'audio/mp4' }; 
+
+                msgRecorder = new MediaRecorder(stream);
+                msgChunks = [];
+                msgRecorder.ondataavailable = (e) => msgChunks.push(e.data);
+                
+                msgRecorder.onstop = async () => {
+                    if (msgChunks.length === 0) return;
+                    const blob = new Blob(msgChunks, { type: msgRecorder.mimeType });
+                    // ファイルサイズ制限対策としてBase64変換して送信
+                    const reader = new FileReader();
+                    reader.readAsDataURL(blob);
+                    reader.onloadend = async () => {
+                        const base64data = reader.result;
+                        await sendVoiceMessage(base64data);
+                    };
+                };
+
+                msgRecorder.start();
+                document.getElementById('voice-rec-panel').classList.add('show');
+                document.getElementById('voice-msg-trigger').classList.add('active');
+                
+                recSeconds = 0;
+                clearInterval(recInterval);
+                recInterval = setInterval(() => {
+                    recSeconds++;
+                    const m = String(Math.floor(recSeconds / 60)).padStart(2, '0');
+                    const s = String(recSeconds % 60).padStart(2, '0');
+                    document.getElementById('voice-timer').innerText = `REC ${m}:${s}`;
+                }, 1000);
+
+            } catch (err) { alert("マイクへのアクセスを許可してください。"); }
+        };
+
+        window.cancelVoiceMsg = () => {
+            if (msgRecorder && msgRecorder.state !== "inactive") {
+                msgChunks = [];
+                msgRecorder.stop();
+            }
+            resetVoiceUI();
+        };
+
+        window.stopAndSendVoiceMsg = () => {
+            if (msgRecorder && msgRecorder.state !== "inactive") {
+                msgRecorder.stop();
+            }
+            resetVoiceUI();
+        };
+
+        function resetVoiceUI() {
+            document.getElementById('voice-rec-panel').classList.remove('show');
+            document.getElementById('voice-msg-trigger').classList.remove('active');
+            clearInterval(recInterval);
+            document.getElementById('voice-timer').innerText = "REC 00:00";
+        }
+
+        async function sendVoiceMessage(audioData) {
+            if(!auth.currentUser || !currentRoomId) return;
+            const msgData = { 
+                uid: auth.currentUser.uid, 
+                emoji: userProfile?.emoji || "👤", 
+                voice: audioData, // 音声データを直接格納
+                time: Date.now() 
+            };
+            await addDoc(collection(db, "rooms", currentRoomId, "messages"), msgData);
+        }
+
+        // --- イントロサウンド生成関数 ---
+        const playTudumSound = (ctx) => {
+            const now = ctx.currentTime;
+            const master = ctx.createGain();
+            master.connect(ctx.destination);
+            master.gain.setValueAtTime(0, now);
+            master.gain.linearRampToValueAtTime(0.8, now + 0.1);
+            master.gain.exponentialRampToValueAtTime(0.001, now + 3.5);
+
+            const osc1 = ctx.createOscillator();
+            const g1 = ctx.createGain();
+            osc1.type = 'sawtooth';
+            osc1.frequency.setValueAtTime(42, now);
+            osc1.frequency.exponentialRampToValueAtTime(28, now + 3);
+            g1.gain.setValueAtTime(0.4, now);
+            osc1.connect(g1); g1.connect(master);
+
+            const osc2 = ctx.createOscillator();
+            const g2 = ctx.createGain();
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(84, now);
+            g2.gain.setValueAtTime(0.3, now);
+            osc2.connect(g2); g2.connect(master);
+
+            [osc1, osc2].forEach(o => { o.start(now); o.stop(now + 3.5); });
+        };
+
+        // --- 修正: startSequence ---
+        window.startSequence = async () => {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+            // イネイブル消去
             document.getElementById('enable-screen').style.display = 'none';
-            document.getElementById('app-body').style.display = 'flex';
-            window.changeTab(auth.currentUser ? 'home' : 'auth');
+            
+            // ローディング表示 (約1.5秒)
+            const loader = document.getElementById('loader-screen');
+            loader.style.display = 'flex';
+
+            setTimeout(() => {
+                loader.style.display = 'none';
+                
+                // イントロ表示
+                const intro = document.getElementById('intro-screen');
+                intro.style.display = 'flex';
+                intro.classList.add('animate-intro');
+                
+                // サウンド再生
+                playTudumSound(audioCtx);
+
+                // イントロ終了後にログイン画面へ
+                setTimeout(() => {
+                    intro.style.transition = 'opacity 0.8s';
+                    intro.style.opacity = '0';
+                    setTimeout(() => {
+                        intro.style.display = 'none';
+                        document.getElementById('app-body').style.display = 'flex';
+                        window.changeTab(auth.currentUser ? 'home' : 'auth');
+                    }, 800);
+                }, 3200);
+            }, 1500);
         };
 
         onAuthStateChanged(auth, async (user) => {
@@ -345,7 +517,16 @@
                     const isMine = d.uid === auth.currentUser.uid;
                     const div = document.createElement('div');
                     div.className = `msg-bubble ${isMine ? 'mine' : 'other'}`;
-                    div.innerHTML = `<div class="user-icon">${d.emoji}</div><div class="msg-content">${d.text}</div>`;
+                    
+                    // 追記：テキストかボイスかでコンテンツを分岐
+                    let contentHTML = '';
+                    if (d.voice) {
+                        contentHTML = `<audio src="${d.voice}" controls style="max-width:180px; height:30px;"></audio>`;
+                    } else {
+                        contentHTML = d.text;
+                    }
+
+                    div.innerHTML = `<div class="user-icon">${d.emoji}</div><div class="msg-content">${contentHTML}</div>`;
                     list.appendChild(div);
                 });
                 const area = document.getElementById('scroll-area');
