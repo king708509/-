@@ -12,12 +12,12 @@
         :root { 
             --bg-main: #111111; --bg-card: #1c1c1e; --bg-input: #2c2c2e;
             --text-main: #ffffff; --text-muted: #8e8e93; --my-blue: #007AFF; 
-            --line-green: #06c755; --border: #2c2c2e;
+            --line-green: #06c755; --border: #2c2c2e; --error-red: #ff3b30;
         }
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: #000; }
         body { font-family: 'Zen Maru Gothic', sans-serif; color: var(--text-main); }
         
-        /* 起動・スプラッシュ演出 (一切の簡素化禁止) */
+        /* 起動・スプラッシュ演出 */
         #enable-screen { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; z-index: 10000; }
         #enable-btn { background: none; border: 1px solid #fff; color: #fff; padding: 10px 30px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 700; }
         #loading-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; z-index: 10000; text-align: center; }
@@ -28,7 +28,7 @@
         .animate-logo { animation: intro 2.8s ease-in-out forwards; }
         @keyframes intro { 0% { opacity: 0; transform: scale(0.9); } 20% { opacity: 1; transform: scale(1); } 100% { opacity: 0; filter: blur(10px); } }
 
-        /* アプリ本体構造 */
+        /* アプリ本体 */
         #app-body { display: none; height: 100vh; flex-direction: column; background: var(--bg-main); padding-top: env(safe-area-inset-top); }
         .header { height: 50px; background: var(--bg-main); display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--border); position: relative; }
         .header-title { font-weight: 700; font-size: 16px; }
@@ -36,15 +36,17 @@
 
         .main-content { flex: 1; overflow-y: auto; padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
 
-        /* 本格的なリストUI (LINE風) */
+        /* ログイン制限用警告 */
+        .auth-guard-msg { display: none; color: var(--error-red); text-align: center; margin-top: 50px; font-weight: 700; font-size: 14px; }
+
+        /* リスト・UI */
         .list-item { padding: 16px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
         .list-item:active { background: #2c2c2e; }
         .list-info { display: flex; flex-direction: column; }
         .list-name { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
         .list-id { font-size: 11px; color: var(--text-muted); }
-        .list-arrow { color: #3a3a3c; font-size: 18px; }
 
-        /* チャットUI */
+        /* チャット */
         #msg-list { display: flex; flex-direction: column; padding: 15px; gap: 18px; }
         .msg-bubble { display: flex; align-items: flex-start; gap: 10px; max-width: 88%; }
         .msg-bubble.mine { align-self: flex-end; flex-direction: row-reverse; }
@@ -53,29 +55,27 @@
         .mine .msg-content { background: var(--line-green); color: #fff; }
         .other .msg-content { background: var(--bg-card); color: #fff; }
 
-        /* カスタムボイスプレイヤー (シークバー) */
+        /* ボイスプレイヤー */
         .voice-player { display: flex; align-items: center; gap: 12px; min-width: 170px; padding: 4px 0; }
-        .play-btn { background: none; border: none; color: #fff; font-size: 16px; cursor: pointer; width: 20px; text-align: center; }
+        .play-btn { background: none; border: none; color: #fff; font-size: 16px; cursor: pointer; width: 20px; }
         .seek-bar { flex: 1; height: 2px; -webkit-appearance: none; background: rgba(255,255,255,0.2); outline: none; }
-        .seek-bar::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; background: #fff; border-radius: 50%; }
 
         /* 入力バー */
         .input-bar { position: fixed; bottom: calc(65px + env(safe-area-inset-bottom)); left: 0; right: 0; background: var(--bg-main); padding: 8px 12px; border-top: 1px solid var(--border); }
         .input-box-wrapper { background: var(--bg-input); border-radius: 18px; display: flex; align-items: center; padding: 0 12px; flex: 1; }
         .input-box-wrapper input { background: none; border: none; color: #fff; flex: 1; padding: 9px 0; outline: none; font-size: 15px; font-family: inherit; }
 
-        /* タブバー (質素なテキスト形式) */
+        /* タブバー */
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(65px + env(safe-area-inset-bottom)); background: var(--bg-card); border-top: 1px solid var(--border); display: flex; }
         .tab-item { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer; }
         .tab-item.active { color: #fff; }
 
-        /* 独自モーダル (UI軟化) */
+        /* 独自モーダル */
         #custom-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 11000; padding: 40px; }
         .modal-card { background: var(--bg-card); width: 100%; border-radius: 14px; padding: 24px; text-align: center; border: 1px solid #333; }
         .modal-btn-row { display: flex; gap: 12px; margin-top: 20px; }
         .m-btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: 700; font-family: inherit; cursor: pointer; }
 
-        /* 汎用スタイル */
         .view { display: none; }
         .section-label { padding: 20px 16px 8px; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
         .form-padding { padding: 0 16px; }
@@ -118,51 +118,41 @@
             </div>
 
             <div id="home-view" class="view">
-                <div class="section-label">JOIN ROOM</div>
-                <div class="form-padding">
-                    <input type="text" id="join-id" class="base-input" placeholder="ルームID">
-                    <input type="password" id="join-pass" class="base-input" placeholder="6桁パスワード" maxlength="6">
-                    <button class="action-btn" onclick="joinRoom()">参加</button>
-                </div>
-                <div class="section-label">CHATS</div>
-                <div id="room-list"></div>
-                <div class="form-padding" style="margin-top:20px;">
-                    <button style="background:none; border:1px solid var(--border); color:var(--text-main); padding:12px; border-radius:10px; width:100%; font-weight:700;" onclick="createRoom()">＋ 新しいトークルーム</button>
+                <div class="auth-guard-msg" id="guard-home">ログイン後に使用できます</div>
+                <div id="home-content">
+                    <div class="section-label">JOIN ROOM</div>
+                    <div class="form-padding"><input type="text" id="join-id" class="base-input" placeholder="ルームID"><input type="password" id="join-pass" class="base-input" placeholder="6桁パスワード" maxlength="6"><button class="action-btn" onclick="joinRoom()">参加</button></div>
+                    <div class="section-label">CHATS</div>
+                    <div id="room-list"></div>
+                    <div class="form-padding" style="margin-top:20px;"><button style="background:none; border:1px solid var(--border); color:var(--text-main); padding:12px; border-radius:10px; width:100%; font-weight:700;" onclick="createRoom()">＋ 新しいトークルーム</button></div>
                 </div>
             </div>
 
             <div id="chat-view" class="view" style="padding:0;"><div id="msg-list"></div></div>
             
             <div id="profile-view" class="view">
-                <div class="section-label">PROFILE</div>
-                <div class="form-padding">
-                    <input type="text" id="p-name" class="base-input" placeholder="名前">
-                    <input type="text" id="p-emoji" class="base-input" placeholder="アイコン(絵文字)">
-                    <button class="action-btn" onclick="updateProfile()">保存して適用</button>
-                    <button onclick="logout()" style="background:none; color:#ff3b30; border:none; margin-top:40px; width:100%; font-weight:700;">ログアウト</button>
+                <div class="auth-guard-msg" id="guard-profile">ログイン後に使用できます</div>
+                <div id="profile-content">
+                    <div class="section-label">PROFILE</div>
+                    <div class="form-padding">
+                        <input type="text" id="p-name" class="base-input" placeholder="名前">
+                        <input type="text" id="p-emoji" class="base-input" placeholder="アイコン(絵文字)">
+                        <button class="action-btn" onclick="updateProfile()">保存して適用</button>
+                        <button onclick="logout()" style="background:none; color:#ff3b30; border:none; margin-top:40px; width:100%; font-weight:700;">ログアウト</button>
+                    </div>
                 </div>
             </div>
             
             <div id="memo-view" class="view">
-                <div class="section-label">MY MEMO</div>
-                <div class="form-padding">
+                <div class="auth-guard-msg" id="guard-memo">ログイン後に使用できます</div>
+                <div id="memo-content" class="form-padding">
+                    <div class="section-label" style="padding-left:0;">MY MEMO</div>
                     <textarea id="memo-input" style="width:100%; height:450px; background:var(--bg-card); color:#fff; border:0.5px solid var(--border); border-radius:12px; padding:15px; box-sizing:border-box; outline:none; resize:none; font-family:inherit; line-height:1.6;" placeholder="内容はリアルタイムで保存されます..."></textarea>
                 </div>
             </div>
         </div>
 
-        <div class="input-bar" id="bottom-bar" style="display:none;">
-            <div id="normal-input" style="display: flex; gap: 12px; align-items: center;">
-                <div style="cursor:pointer; font-size:22px;" onclick="startRecording()">🎤</div>
-                <div class="input-box-wrapper"><input type="text" id="chat-input" placeholder="メッセージ"></div>
-                <div onclick="sendMessage()" style="color:var(--my-blue); font-weight:bold; cursor:pointer; padding:0 5px;">送信</div>
-            </div>
-            <div id="recording-input" style="display: none; justify-content: space-between; align-items: center; width: 100%;">
-                <div onclick="cancelRecording()" style="color:var(--text-muted); font-size:14px;">キャンセル</div>
-                <div style="color:#ff3b30; font-weight:bold; font-size:14px;">REC...</div>
-                <div onclick="finishRecording()" style="color:var(--my-blue); font-weight:bold;">送信</div>
-            </div>
-        </div>
+        <div class="input-bar" id="bottom-bar" style="display:none;"><div id="normal-input" style="display: flex; gap: 12px; align-items: center;"><div style="cursor:pointer; font-size:22px;" onclick="startRecording()">🎤</div><div class="input-box-wrapper"><input type="text" id="chat-input" placeholder="メッセージ"></div><div onclick="sendMessage()" style="color:var(--my-blue); font-weight:bold; cursor:pointer; padding:0 5px;">送信</div></div><div id="recording-input" style="display: none; justify-content: space-between; align-items: center; width: 100%;"><div onclick="cancelRecording()" style="color:var(--text-muted); font-size:14px;">キャンセル</div><div style="color:#ff3b30; font-weight:bold; font-size:14px;">REC...</div><div onclick="finishRecording()" style="color:var(--my-blue); font-weight:bold;">送信</div></div></div>
 
         <div class="tab-bar" id="nav-tabs">
             <div class="tab-item active" id="tab-home" onclick="changeTab('home')">トーク</div>
@@ -182,14 +172,12 @@
         let userProfile = null, audioCtx = null, unsubMsg = null, authMode = 'login', currentRoomId = null;
         let mediaRecorder = null, audioChunks = [], micStream = null, lastMsgTime = 0;
 
-        // 全機種対応MIME取得 (維持)
         const getSupportedMimeType = () => {
             const types = ["audio/mp4", "audio/aac", "audio/webm;codecs=opus", "audio/webm"];
             for (let t of types) { if (MediaRecorder.isTypeSupported(t)) return t; }
             return "";
         };
 
-        // ﾎﾟｯ効果音 (維持)
         const playPopSound = (isSend) => {
             if(!audioCtx) return;
             const now = audioCtx.currentTime;
@@ -204,7 +192,6 @@
             osc.start(); osc.stop(now + 0.1);
         };
 
-        // 演出シークエンス (一切の削除禁止)
         window.startSequence = () => {
             if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             document.getElementById('enable-screen').style.display = 'none';
@@ -217,7 +204,6 @@
         const startSplash = () => {
             const sp = document.getElementById('splash-screen'); sp.style.display = 'flex';
             document.getElementById('splash-logo').classList.add('animate-logo');
-            // イントロ低音
             const now = audioCtx.currentTime;
             const g = audioCtx.createGain(); g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.2, now + 0.5); g.gain.linearRampToValueAtTime(0, now + 2.5);
             const o = audioCtx.createOscillator(); o.frequency.setValueAtTime(55, now); o.frequency.exponentialRampToValueAtTime(25, now + 2.5);
@@ -225,7 +211,6 @@
             setTimeout(() => { sp.style.display = 'none'; document.getElementById('app-body').style.display = 'flex'; checkUser(); }, 2800);
         };
 
-        // 認証
         window.toggleAuthMode = () => {
             authMode = (authMode === 'login' ? 'signup' : 'login');
             document.getElementById('auth-btn-text').innerText = (authMode === 'login' ? 'ログイン' : '新規登録');
@@ -235,23 +220,43 @@
             try { if(authMode==='login') await signInWithEmailAndPassword(auth, e, p); else await createUserWithEmailAndPassword(auth, e, p); } catch(err) { alert(err.message); }
         };
 
-        // 【修正】勝手に消えないための確実なガード
         const checkUser = () => {
             onAuthStateChanged(auth, async user => {
                 if (user) {
                     const uDoc = await getDoc(doc(db, "users", user.uid));
-                    // 名前データがFirestoreに存在する時のみホームへ。なければプロフィール画面で固定。
                     if (uDoc.exists() && uDoc.data().name) { 
                         userProfile = uDoc.data(); 
                         document.getElementById('p-name').value = userProfile.name;
                         document.getElementById('p-emoji').value = userProfile.emoji;
+                        applyGuard(false);
                         changeTab('home'); loadRooms(); 
-                    } else { showView('profile-view'); }
-                } else { showView('login-view'); }
+                    } else { 
+                        applyGuard(true);
+                        showView('profile-view'); 
+                    }
+                } else { 
+                    applyGuard(true);
+                    showView('login-view'); 
+                }
             });
         };
 
-        // ルーム操作 (UI軟化モーダル適用)
+        // 【新設】権限ガード
+        const applyGuard = (locked) => {
+            const display = locked ? 'none' : 'block';
+            const guard = locked ? 'block' : 'none';
+            document.getElementById('home-content').style.display = display;
+            document.getElementById('guard-home').style.display = guard;
+            document.getElementById('memo-content').style.display = display;
+            document.getElementById('guard-memo').style.display = guard;
+            
+            // プロフィール名は特別。未登録でも名前入力欄は必要なので、
+            // 「完全にログアウト状態」の時だけロックする。
+            const isLoggedOut = !auth.currentUser;
+            document.getElementById('profile-content').style.display = isLoggedOut ? 'none' : 'block';
+            document.getElementById('guard-profile').style.display = isLoggedOut ? 'block' : 'none';
+        };
+
         window.joinRoom = async () => {
             const rid = document.getElementById('join-id').value.toUpperCase().trim(), pass = document.getElementById('join-pass').value.trim();
             if(!rid || !pass) return;
@@ -278,7 +283,6 @@
             });
         };
 
-        // 録音 (全機種対応・維持)
         window.startRecording = async () => {
             try {
                 micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -306,7 +310,6 @@
             mediaRecorder.stop();
         };
 
-        // ボイメプレイヤー (シークバー・維持)
         window.initVoicePlayer = (id, url) => {
             const audio = new Audio(url);
             const btn = document.getElementById(`btn-${id}`), seek = document.getElementById(`seek-${id}`);
@@ -371,7 +374,9 @@
             const n = document.getElementById('p-name').value, e = document.getElementById('p-emoji').value;
             if(!n) return alert("名前は必須です");
             await setDoc(doc(db, "users", auth.currentUser.uid), {name:n, emoji:e}, {merge:true});
-            userProfile = {name:n, emoji:e}; changeTab('home');
+            userProfile = {name:n, emoji:e};
+            applyGuard(false);
+            changeTab('home');
         };
     </script>
 </body>
