@@ -8,35 +8,46 @@
     <style>
         :root { --bg-main:#111; --bg-card:#1c1c1e; --bg-input:#2c2c2e; --text-main:#fff; --text-muted:#8e8e93; --my-blue:#007AFF; --line-green:#06c755; --border:#2c2c2e; --error-red:#ff3b30; }
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: #000; font-family: 'Zen Maru Gothic', sans-serif; color: var(--text-main); -webkit-tap-highlight-color: transparent; }
+        
+        /* 初期状態は全て隠す */
         #app-body { display: none; height: 100vh; flex-direction: column; background: var(--bg-main); padding-top: env(safe-area-inset-top); }
+        .view { display: none; }
+
         .header { height: 55px; background: var(--bg-main); display: flex; align-items: center; justify-content: center; border-bottom: 0.5px solid var(--border); position: relative; z-index: 1100; }
         .header-right { position: absolute; right: 18px; font-size: 22px; cursor: pointer; padding: 5px; }
         .main-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+        
+        /* チャットUI */
         #msg-list { display: flex; flex-direction: column; padding: 20px 15px 140px; gap: 20px; }
         .msg-bubble { display: flex; align-items: flex-start; gap: 12px; max-width: 85%; }
         .msg-bubble.mine { align-self: flex-end; flex-direction: row-reverse; }
         .user-icon { width: 40px; height: 40px; border-radius: 13px; background: #3a3a3c; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
         .msg-content { padding: 10px 15px; border-radius: 18px; font-size: 15px; line-height: 1.5; word-break: break-all; background: var(--bg-card); }
         .mine .msg-content { background: var(--line-green); border-bottom-right-radius: 4px; }
-        .other .msg-content { border-bottom-left-radius: 4px; }
+        
         .input-bar { position: fixed; bottom: calc(65px + env(safe-area-inset-bottom)); left: 0; right: 0; background: var(--bg-main); padding: 12px 15px; border-top: 0.5px solid var(--border); z-index: 1050; display: none; align-items: center; }
         .input-box-wrapper { background: var(--bg-input); border-radius: 22px; display: flex; align-items: center; padding: 0 15px; flex: 1; min-height: 44px; }
         .input-box-wrapper input { background: none; border: none; color: #fff; flex: 1; padding: 10px 0; outline: none; font-size: 16px; }
-        #send-btn { color: var(--my-blue); font-weight: 900; cursor: pointer; padding: 10px 0 10px 15px; font-size: 16px; z-index: 1100; position: relative; }
+        
+        /* タブバー */
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(65px + env(safe-area-inset-bottom)); background: var(--bg-card); border-top: 0.5px solid var(--border); display: flex; z-index: 1000; }
         .tab-item { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 11px; font-weight: 700; flex-direction: column; }
         .tab-item.active { color: #fff; }
-        .view { display: none; }
+
+        /* 共通パーツ */
         .section-label { padding: 24px 16px 10px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
         .form-padding { padding: 0 16px; }
         input.base-input { background: var(--bg-card); border: 0.5px solid var(--border); color: #fff; padding: 15px; border-radius: 12px; width: 100%; box-sizing: border-box; margin-bottom: 15px; font-size: 16px; outline: none; }
         button.action-btn { background: var(--my-blue); color: #fff; border: none; padding: 16px; border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; }
+        
+        /* 起動画面 */
+        #enable-screen { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; z-index: 10000; }
+        #enable-btn { background: none; border: 1px solid #fff; color: #fff; padding: 12px 35px; border-radius: 4px; font-size: 14px; font-weight: 700; letter-spacing: 2px; }
+
         #room-menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: flex-end; }
         .menu-sheet { background: var(--bg-card); width: 100%; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 20px 0 calc(20px + env(safe-area-inset-bottom)); }
         .menu-item { padding: 18px 25px; border-bottom: 0.5px solid var(--border); font-size: 16px; display: flex; justify-content: space-between; }
         .danger { color: var(--error-red); }
-        #enable-screen { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; z-index: 10000; }
-        #enable-btn { background: none; border: 1px solid #fff; color: #fff; padding: 12px 35px; border-radius: 4px; font-size: 14px; font-weight: 700; letter-spacing: 2px; }
     </style>
 </head>
 <body>
@@ -45,7 +56,7 @@
 
     <div id="app-body">
         <div class="header">
-            <div class="header-title" id="view-title">COMMON</div>
+            <div class="header-title" id="view-title">WELCOME</div>
             <div class="header-right" id="header-action" style="display:none;" onclick="toggleRoomMenu()">⋮</div>
         </div>
         
@@ -95,11 +106,11 @@
 
         <div class="input-bar" id="bottom-bar">
             <div class="input-box-wrapper"><input type="text" id="chat-input" placeholder="メッセージ..."></div>
-            <div id="send-btn" onclick="sendMessage()">送信</div>
+            <div id="send-btn" onclick="sendMessage()" style="color:var(--my-blue); font-weight:900; cursor:pointer; padding:10px 0 10px 15px;">送信</div>
         </div>
 
-        <div class="tab-bar" id="app-tab-bar">
-            <div class="tab-item active" id="tab-home" onclick="changeTab('home')">トーク</div>
+        <div class="tab-bar" id="main-tabs" style="display:none;">
+            <div class="tab-item" id="tab-home" onclick="changeTab('home')">トーク</div>
             <div class="tab-item" id="tab-memo" onclick="changeTab('memo')">メモ</div>
             <div class="tab-item" id="tab-profile" onclick="changeTab('profile')">設定</div>
         </div>
@@ -133,208 +144,141 @@
         let authMode = 'login';
         let lastMsgTime = 0;
 
-        const initAudio = async () => {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') await audioCtx.resume();
-        };
+        // --- 門番: 画面遷移の徹底ガード ---
+        window.changeTab = async (tab) => {
+            const user = auth.currentUser;
 
-        const playPopSound = (isSend) => {
-            if(!audioCtx || audioCtx.state !== 'running') return;
-            const now = audioCtx.currentTime;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.frequency.setValueAtTime(isSend ? 880 : 660, now);
-            osc.frequency.exponentialRampToValueAtTime(100, now + 0.12);
-            gain.gain.setValueAtTime(0, now);
-            gain.gain.linearRampToValueAtTime(0.1, now + 0.01);
-            gain.gain.linearRampToValueAtTime(0, now + 0.12);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(now + 0.15);
-        };
-
-        // --- 修正点：認証監視を常に実行 ---
-        onAuthStateChanged(auth, async (user) => {
+            // 1. 未ログインなら、どこを押そうが強制的にWELCOMEへ
             if (!user) {
-                userProfile = null;
-                changeTab('auth');
+                renderTab('auth');
                 return;
             }
-            const uDoc = await getDoc(doc(db, "users", user.uid));
-            if (uDoc.exists() && uDoc.data().name) {
+
+            // 2. ログイン済みでも名前がなければ設定へ強制誘導
+            if (tab !== 'profile' && !userProfile) {
+                const uDoc = await getDoc(doc(db, "users", user.uid));
+                if (!uDoc.exists() || !uDoc.data().name) {
+                    renderTab('profile');
+                    return;
+                }
                 userProfile = uDoc.data();
-                // ログイン中かつ名前があるなら、現在の表示がAuthならHomeへ飛ばす
-                const currentView = document.querySelector('.view[style*="display: block"]');
-                if(!currentView || currentView.id === 'auth-view') changeTab('home');
-            } else {
-                changeTab('profile'); // 名前未設定なら強制
+            }
+
+            renderTab(tab);
+        };
+
+        function renderTab(tab) {
+            // UIリセット
+            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+            document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
+            
+            const isAuth = (tab === 'auth');
+            document.getElementById('main-tabs').style.display = isAuth ? 'none' : 'flex';
+            document.getElementById('bottom-bar').style.display = (tab === 'chat') ? 'flex' : 'none';
+            document.getElementById('header-action').style.display = (tab === 'chat') ? 'block' : 'none';
+
+            const target = document.getElementById(`${tab}-view`);
+            if (target) target.style.display = 'block';
+
+            const tabBtn = document.getElementById(`tab-${tab}`);
+            if (tabBtn) tabBtn.classList.add('active');
+
+            const titles = { auth: 'WELCOME', home: 'COMMON', profile: 'SETTING', memo: 'MEMO' };
+            document.getElementById('view-title').innerText = titles[tab] || "COMMON";
+
+            if (tab === 'home') loadMyRooms();
+            if (tab === 'chat') loadMessages();
+        }
+
+        // --- 起動シーケンス ---
+        window.startSequence = () => {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            document.getElementById('enable-screen').style.display = 'none';
+            document.getElementById('app-body').style.display = 'flex';
+            window.changeTab(auth.currentUser ? 'home' : 'auth');
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (document.getElementById('app-body').style.display === 'flex') {
+                window.changeTab(user ? 'home' : 'auth');
             }
         });
 
-        window.startSequence = async () => {
-            await initAudio();
-            document.getElementById('enable-screen').style.display = 'none';
-            document.getElementById('app-body').style.display = 'flex';
-        };
-
+        // --- 認証 ---
         window.handleAuth = async () => {
             const email = document.getElementById('auth-email').value;
             const pass = document.getElementById('auth-password').value;
-            if(!email || !pass) return alert("入力してください");
+            if(!email || !pass) return alert("未入力");
             try {
                 if(authMode === 'login') await signInWithEmailAndPassword(auth, email, pass);
                 else await createUserWithEmailAndPassword(auth, email, pass);
-            } catch (e) { alert("エラー: " + e.message); }
+            } catch (e) { alert(e.message); }
         };
 
         window.toggleAuthMode = () => {
             authMode = (authMode === 'login') ? 'signup' : 'login';
             document.getElementById('auth-btn-text').innerText = (authMode === 'login') ? 'ログイン' : '新規登録';
-            document.getElementById('auth-toggle-msg').innerText = (authMode === 'login') ? '新規アカウント作成はこちら' : 'ログインはこちら';
+            document.getElementById('auth-toggle-msg').innerText = (authMode === 'login') ? '新規登録はこちら' : 'ログインはこちら';
         };
 
-        // --- 修正点：画面遷移ガードの強化 ---
-        window.changeTab = (tab) => {
-            // UIリセット
-            document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
-            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-            document.getElementById('bottom-bar').style.display = 'none';
-            document.getElementById('header-action').style.display = 'none';
-            document.getElementById('app-tab-bar').style.display = 'flex';
+        window.logout = () => signOut(auth).then(() => location.reload());
 
-            // 権限チェック
-            if(!auth.currentUser && tab !== 'auth') { tab = 'auth'; }
-
-            const views = {
-                'home': () => {
-                    document.getElementById('tab-home').classList.add('active');
-                    document.getElementById('home-view').style.display = 'block';
-                    document.getElementById('view-title').innerText = "COMMON";
-                    loadMyRooms();
-                },
-                'chat': () => {
-                    document.getElementById('chat-view').style.display = 'block';
-                    document.getElementById('bottom-bar').style.display = 'flex';
-                    document.getElementById('header-action').style.display = 'block';
-                    loadMessages();
-                },
-                'profile': () => {
-                    document.getElementById('tab-profile').classList.add('active');
-                    document.getElementById('profile-view').style.display = 'block';
-                    document.getElementById('view-title').innerText = "SETTING";
-                    if(userProfile) {
-                        document.getElementById('p-name').value = userProfile.name || "";
-                        document.getElementById('p-emoji').value = userProfile.emoji || "";
-                    }
-                },
-                'memo': () => {
-                    document.getElementById('tab-memo').classList.add('active');
-                    document.getElementById('memo-view').style.display = 'block';
-                    document.getElementById('view-title').innerText = "MEMO";
-                },
-                'auth': () => {
-                    document.getElementById('auth-view').style.display = 'block';
-                    document.getElementById('view-title').innerText = "WELCOME";
-                    document.getElementById('app-tab-bar').style.display = 'none'; // 認証中はタブ隠す
-                }
-            };
-            
-            if(views[tab]) views[tab]();
-        };
-
+        // --- プロフィール ---
         window.updateProfile = async () => {
             const name = document.getElementById('p-name').value.trim();
             const emoji = document.getElementById('p-emoji').value.trim() || "👤";
-            if(!name) { alert("名前を入力してください"); return; }
-            try {
-                await setDoc(doc(db, "users", auth.currentUser.uid), { name, emoji }, { merge: true });
-                userProfile = { name, emoji };
-                alert("保存しました");
-                changeTab('home');
-            } catch(e) { alert(e.message); }
+            if(!name) return alert("名前必須");
+            await setDoc(doc(db, "users", auth.currentUser.uid), { name, emoji }, { merge: true });
+            userProfile = { name, emoji };
+            window.changeTab('home');
         };
 
+        // --- ルーム/チャット ---
         window.loadMyRooms = () => {
             if(unsubRooms) unsubRooms();
             const q = query(collection(db, "rooms"), where("members", "array-contains", auth.currentUser.uid));
             unsubRooms = onSnapshot(q, (snap) => {
                 const list = document.getElementById('room-list');
                 list.innerHTML = "";
-                snap.forEach(doc => {
-                    const r = doc.data();
+                snap.forEach(docSnap => {
+                    const r = docSnap.data();
                     const btn = document.createElement('button');
                     btn.className = "action-btn"; btn.style.background = "var(--bg-card)"; btn.style.marginBottom = "10px";
                     btn.innerText = r.name;
-                    btn.onclick = () => { 
-                        currentRoomId = doc.id; 
-                        document.getElementById('view-title').innerText = r.name;
-                        changeTab('chat');
-                    };
+                    btn.onclick = () => { currentRoomId = docSnap.id; window.changeTab('chat'); };
                     list.appendChild(btn);
                 });
             });
         };
 
         window.sendMessage = async () => {
+            if(!auth.currentUser || !currentRoomId) return;
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
-            if (!text || !currentRoomId) return;
-            playPopSound(true);
-            const msgData = {
-                uid: auth.currentUser.uid,
-                emoji: userProfile?.emoji || "👤",
-                text: text,
-                time: Date.now()
-            };
+            if(!text) return;
+            const msgData = { uid: auth.currentUser.uid, emoji: userProfile?.emoji || "👤", text, time: Date.now() };
             input.value = "";
             await addDoc(collection(db, "rooms", currentRoomId, "messages"), msgData);
         };
 
-        const loadMessages = () => {
+        function loadMessages() {
             if (unsubMsg) unsubMsg();
             const q = query(collection(db, "rooms", currentRoomId, "messages"), orderBy("time", "asc"));
             unsubMsg = onSnapshot(q, (snap) => {
                 const list = document.getElementById('msg-list');
                 list.innerHTML = "";
-                snap.forEach(doc => {
-                    const d = doc.data();
+                snap.forEach(docSnap => {
+                    const d = docSnap.data();
                     const isMine = d.uid === auth.currentUser.uid;
-                    if (!isMine && d.time > lastMsgTime && lastMsgTime !== 0) playPopSound(false);
-                    if (d.time > lastMsgTime) lastMsgTime = d.time;
-                    
                     const div = document.createElement('div');
                     div.className = `msg-bubble ${isMine ? 'mine' : 'other'}`;
                     div.innerHTML = `<div class="user-icon">${d.emoji}</div><div class="msg-content">${d.text}</div>`;
                     list.appendChild(div);
                 });
-                window.requestAnimationFrame(() => {
-                    const area = document.getElementById('scroll-area');
-                    area.scrollTop = area.scrollHeight;
-                });
+                const area = document.getElementById('scroll-area');
+                area.scrollTop = area.scrollHeight;
             });
-        };
-
-        window.toggleRoomMenu = async () => {
-            const el = document.getElementById('room-menu-overlay');
-            if(el.style.display === 'flex') { el.style.display = 'none'; return; }
-            const rDoc = await getDoc(doc(db, "rooms", currentRoomId));
-            const rData = rDoc.data();
-            document.getElementById('m-room-id').innerText = currentRoomId;
-            document.getElementById('m-room-pass').innerText = rData.pass;
-            const hostTools = document.getElementById('host-tools');
-            hostTools.innerHTML = "";
-            if(rData.host === auth.currentUser.uid) {
-                const label = document.createElement('div'); label.className="section-label"; label.innerText="KICK MEMBERS";
-                hostTools.appendChild(label);
-                rData.members.forEach(mid => {
-                    if(mid !== auth.currentUser.uid) {
-                        const item = document.createElement('div'); item.className="menu-item";
-                        item.innerHTML = `<span>ID:${mid.substring(0,5)}</span><span class="danger" onclick="kickMember('${mid}')">キック</span>`;
-                        hostTools.appendChild(item);
-                    }
-                });
-            }
-            el.style.display = 'flex';
-        };
+        }
 
         window.createRoom = async () => {
             const name = prompt("ルーム名");
@@ -349,23 +293,26 @@
             const rDoc = await getDoc(doc(db, "rooms", rid));
             if(rDoc.exists() && rDoc.data().pass === pass) {
                 await updateDoc(doc(db, "rooms", rid), { members: arrayUnion(auth.currentUser.uid) });
-                changeTab('home');
-            } else { alert("失敗しました"); }
+                window.changeTab('home');
+            } else { alert("失敗"); }
+        };
+
+        window.toggleRoomMenu = async () => {
+            const el = document.getElementById('room-menu-overlay');
+            if(el.style.display === 'flex') { el.style.display = 'none'; return; }
+            const rDoc = await getDoc(doc(db, "rooms", currentRoomId));
+            const rData = rDoc.data();
+            document.getElementById('m-room-id').innerText = currentRoomId;
+            document.getElementById('m-room-pass').innerText = rData.pass;
+            el.style.display = 'flex';
         };
 
         window.leaveRoom = async () => {
-            if(!confirm("退会しますか？")) return;
+            if(!confirm("退会？")) return;
             await updateDoc(doc(db, "rooms", currentRoomId), { members: arrayRemove(auth.currentUser.uid) });
-            toggleRoomMenu(); changeTab('home');
+            window.changeTab('home');
         };
 
-        window.kickMember = async (mid) => {
-            if(!confirm("キックしますか？")) return;
-            await updateDoc(doc(db, "rooms", currentRoomId), { members: arrayRemove(mid) });
-            toggleRoomMenu();
-        };
-
-        window.logout = () => signOut(auth).then(() => location.reload());
         document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     </script>
 </body>
