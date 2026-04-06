@@ -6,10 +6,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="COMMON">
-    
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="manifest" href="manifest.json">
-    
     <title>COMMON</title>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
     
@@ -19,88 +17,91 @@
             --text-main: #dbdee1; --text-muted: #949ba4; --discord-blue: #5865f2;
             --netflix-red: #E50914; 
         }
-        
         html, body { height: 100%; height: -webkit-fill-available; margin: 0; padding: 0; overflow: hidden; background: #000; }
         body { font-family: 'Zen Maru Gothic', sans-serif; color: var(--text-main); }
         
-        /* 1. 演出系 */
+        /* 演出 */
         #enable-screen { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; z-index: 10000; }
-        #enable-btn { background: none; border: 2px solid #fff; color: #fff; padding: 12px 40px; border-radius: 30px; cursor: pointer; letter-spacing: 2px; font-weight: 700; }
+        #enable-btn { background: none; border: 2px solid #fff; color: #fff; padding: 12px 40px; border-radius: 30px; cursor: pointer; font-weight: 700; }
         #loading-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; display: none; z-index: 10000; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #fff; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        #loading-progress { width: 180px; height: 6px; background: #1e1f22; border-radius: 10px; margin: 0 auto; overflow: hidden; }
-        #loading-bar { width: 0%; height: 100%; background: #fff; border-radius: 10px; }
+        #loading-bar { width: 180px; height: 6px; background: #1e1f22; border-radius: 10px; margin: 0 auto; overflow: hidden; }
+        #loading-fill { width: 0%; height: 100%; background: #fff; }
         #splash-screen { position: fixed; inset: 0; background: #000; display: none; align-items: center; justify-content: center; z-index: 9999; }
         #splash-logo { color: var(--netflix-red); font-size: 55px; font-weight: 900; opacity: 0; letter-spacing: 8px; }
         .animate-logo { animation: intro 3s ease-in-out forwards; }
-        @keyframes intro { 0% { opacity: 0; transform: scale(0.8); filter: blur(10px); } 20% { opacity: 1; transform: scale(1); filter: blur(0px); } 80% { opacity: 1; } 100% { opacity: 0; transform: scale(1.1); filter: blur(20px); } }
+        @keyframes intro { 0% { opacity: 0; transform: scale(0.8); filter: blur(10px); } 20% { opacity: 1; transform: scale(1); filter: blur(0px); } 100% { opacity: 0; transform: scale(1.1); filter: blur(20px); } }
 
-        /* 2. アプリ本体レイアウト */
-        #app-body { 
-            display: none; height: 100vh; flex-direction: column; 
-            background: var(--bg-dark);
-            padding-top: env(safe-area-inset-top);
-        }
+        /* レイアウト */
+        #app-body { display: none; height: 100vh; flex-direction: column; background: var(--bg-dark); padding-top: env(safe-area-inset-top); }
         .header { height: 50px; background: var(--bg-card); display: flex; align-items: center; justify-content: center; font-weight: 900; border-bottom: 1px solid #232428; }
         .main-content { flex: 1; overflow-y: auto; padding-bottom: calc(140px + env(safe-area-inset-bottom)); }
         
         #msg-list { display: flex; flex-direction: column; padding: 15px; gap: 15px; }
         .msg-bubble { display: flex; align-items: flex-end; gap: 8px; max-width: 85%; }
         .msg-bubble.mine { align-self: flex-end; flex-direction: row-reverse; }
-        .user-emoji { width: 34px; height: 34px; border-radius: 12px; background: #4e5058; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .user-emoji { width: 34px; height: 34px; border-radius: 12px; background: #4e5058; display: flex; align-items: center; justify-content: center; font-size: 18px; }
         .msg-content { padding: 10px 14px; border-radius: 18px; font-size: 15px; line-height: 1.4; word-break: break-all; }
         .mine .msg-content { background: var(--discord-blue); color: #fff; border-bottom-right-radius: 4px; }
         .other .msg-content { background: var(--bg-bubble-other); color: var(--text-main); border-bottom-left-radius: 4px; }
         audio { height: 35px; width: 180px; margin-top: 5px; filter: invert(0.9); }
 
+        /* 入力エリア */
         .input-bar { 
-            position: fixed; bottom: calc(60px + env(safe-area-inset-bottom)); 
-            left: 0; right: 0; background: var(--bg-dark); 
-            padding: 10px 15px; display: flex; gap: 12px; align-items: center; 
-            border-top: 1px solid #232428; z-index: 100;
+            position: fixed; bottom: calc(60px + env(safe-area-inset-bottom)); left: 0; right: 0; 
+            background: var(--bg-dark); padding: 10px 15px; border-top: 1px solid #232428; z-index: 100;
         }
         .input-box { background: var(--bg-card); border-radius: 25px; flex: 1; display: flex; align-items: center; padding: 0 15px; }
-        .input-box input { background: none; border: none; color: #fff; flex: 1; padding: 12px 0; outline: none; font-family: 'Zen Maru Gothic', sans-serif; font-size: 16px; }
+        .input-box input { background: none; border: none; color: #fff; flex: 1; padding: 12px 0; outline: none; font-size: 16px; }
         
+        /* 録音中UI */
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        .recording-text { color: #f23f43; font-weight: bold; animation: blink 1s infinite; }
+
+        /* タブ */
         .tab-bar { 
-            position: fixed; bottom: 0; left: 0; right: 0; 
-            height: calc(60px + env(safe-area-inset-bottom)); 
-            background: var(--bg-card); border-top: 1px solid #232428; 
-            display: flex; justify-content: space-around; align-items: flex-start;
-            padding-top: 8px; z-index: 100;
+            position: fixed; bottom: 0; left: 0; right: 0; height: calc(60px + env(safe-area-inset-bottom)); 
+            background: var(--bg-card); border-top: 1px solid #232428; display: flex; padding-top: 8px;
         }
         .tab-item { text-align: center; font-size: 10px; color: var(--text-muted); flex: 1; }
         .tab-item.active { color: #fff; }
-        .tab-icon { font-size: 22px; display: block; margin-bottom: 2px; }
+        .tab-icon { font-size: 22px; display: block; }
 
         .view { display: none; padding: 20px; }
         .card { background: var(--bg-card); padding: 20px; border-radius: 15px; margin-bottom: 15px; }
-        button { background: var(--discord-blue); color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; }
-        input[type="text"], input[type="email"], input[type="password"], textarea { background: #1e1f22; border: none; color: #fff; padding: 12px; border-radius: 10px; width: 100%; box-sizing: border-box; margin: 8px 0; font-family: 'Zen Maru Gothic', sans-serif; }
+        button { background: var(--discord-blue); color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: 700; width: 100%; }
+        textarea, input[type="text"] { background: #1e1f22; border: none; color: #fff; padding: 12px; border-radius: 10px; width: 100%; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
     <div id="enable-screen"><button id="enable-btn" onclick="startSequence()">ENABLE START</button></div>
-    <div id="loading-container"><div class="spinner"></div><div id="loading-progress"><div id="loading-bar"></div></div></div>
+    <div id="loading-container"><div class="spinner"></div><div id="loading-bar"><div id="loading-fill"></div></div></div>
     <div id="splash-screen"><div id="splash-logo">COMMON</div></div>
 
     <div id="app-body">
-        <div class="header" id="header-title">COMMON</div>
+        <div class="header">COMMON</div>
         <div class="main-content" id="scroll-area">
-            <div id="login-view" class="view"><div class="card"><h3>ログイン</h3><input type="email" id="email" placeholder="メール"><input type="password" id="password" placeholder="パスワード"><button onclick="login()">ログイン</button></div></div>
+            <div id="login-view" class="view"><div class="card"><h3>ログイン</h3><input type="email" id="email" placeholder="メール"><input type="password" id="password" placeholder="パスワード" style="margin-top:10px;"><button onclick="login()" style="margin-top:15px;">ログイン</button></div></div>
             <div id="home-view" class="view"><div class="card"><h3>ROOMS</h3><div id="room-list"></div><button onclick="createRoom()" style="margin-top:15px;">＋ 新ルーム作成</button></div></div>
             <div id="chat-view" class="view" style="padding:0;"><div id="msg-list"></div></div>
-            <div id="profile-view" class="view"><div class="card"><h2>設定</h2><input type="text" id="p-emoji" placeholder="絵文字"><input type="text" id="p-name" placeholder="お名前"><button onclick="updateProfile()">保存</button><button onclick="logout()" style="background:#f23f43; margin-top:20px;">ログアウト</button></div></div>
-            <div id="memo-view" class="view" style="height:100%;"><div class="card" style="height:300px;"><textarea id="memo-input" style="height:100%; width:100%; resize:none; background:none; border:none; color:#fff;" placeholder="自動保存メモ..."></textarea></div></div>
+            <div id="profile-view" class="view"><div class="card"><h2>設定</h2><input type="text" id="p-emoji" placeholder="絵文字"><input type="text" id="p-name" placeholder="お名前" style="margin-top:10px;"><button onclick="updateProfile()" style="margin-top:15px;">保存</button><button onclick="logout()" style="background:#f23f43; margin-top:20px;">ログアウト</button></div></div>
+            <div id="memo-view" class="view" style="height:100%;"><div class="card" style="height:300px;"><textarea id="memo-input" style="height:100%; resize:none; background:none;" placeholder="自動保存メモ..."></textarea></div></div>
         </div>
 
-        <div class="input-bar" id="bottom-input-bar" style="display:none;">
-            <a href="https://gigafile.nu/" target="_blank" style="text-decoration:none; font-size:22px;">📁</a>
-            <div id="mic-btn" style="cursor:pointer; font-size:22px;" onclick="toggleRecording()">🎤</div>
-            <div class="input-box"><input type="text" id="chat-input" placeholder="メッセージ..."></div>
-            <div onclick="sendMessage()" style="font-size:22px; cursor:pointer;">🚀</div>
+        <div class="input-bar" id="bottom-bar" style="display:none;">
+            <div id="normal-input" style="display: flex; width: 100%; gap: 12px; align-items: center;">
+                <a href="https://gigafile.nu/" target="_blank" style="text-decoration:none; font-size:22px;">📁</a>
+                <div style="cursor:pointer; font-size:22px;" onclick="startRecording()">🎤</div>
+                <div class="input-box"><input type="text" id="chat-input" placeholder="メッセージ..."></div>
+                <div onclick="sendMessage()" style="font-size:22px; cursor:pointer;">🚀</div>
+            </div>
+            <div id="recording-input" style="display: none; width: 100%; gap: 20px; align-items: center; justify-content: space-between;">
+                <div onclick="cancelRecording()" style="font-size:18px; cursor:pointer; color:#949ba4;">🗑️ 却下</div>
+                <div class="recording-text">● 録音中...</div>
+                <div onclick="finishRecording()" style="font-size:18px; cursor:pointer; color:#5865f2; font-weight:bold;">✅ 送信</div>
+            </div>
         </div>
 
         <div class="tab-bar">
@@ -118,13 +119,11 @@
         const config = { apiKey: "AIzaSyAP_BaYs01oniLSPQ5EOPV9m9brjKn-A2c", authDomain: "soshozi.firebaseapp.com", projectId: "soshozi", storageBucket: "soshozi.firebasestorage.app", messagingSenderId: "607624264440", appId: "1:607624264440:web:f3798bdc083a78b426190d" };
         const app = initializeApp(config), auth = getAuth(app), db = getFirestore(app);
         
-        let userProfile = null, audioCtx = null, unsubMsg = null, mediaRecorder = null, audioChunks = [];
+        let userProfile = null, audioCtx = null, unsubMsg = null;
+        let mediaRecorder = null, audioChunks = [], micStream = null;
 
-        // PWA Service Worker 登録
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW fail', err));
-            });
+            window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
         }
 
         const initAudio = () => { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); };
@@ -139,7 +138,7 @@
             initAudio(); document.getElementById('enable-screen').style.display = 'none';
             document.getElementById('loading-container').style.display = 'block';
             let w = 0; const iv = setInterval(() => {
-                w += 5; document.getElementById('loading-bar').style.width = w + '%';
+                w += 5; document.getElementById('loading-fill').style.width = w + '%';
                 if(w >= 100) { clearInterval(iv); document.getElementById('loading-container').style.display = 'none'; startSplash(); }
             }, 30);
         };
@@ -151,24 +150,42 @@
             setTimeout(() => { sp.style.display = 'none'; document.getElementById('app-body').style.display = 'flex'; checkUser(); }, 3000);
         };
 
-        window.toggleRecording = async () => {
-            const btn = document.getElementById('mic-btn');
-            if (!mediaRecorder || mediaRecorder.state === "inactive") {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream); audioChunks = [];
+        // --- 録音ロジック ---
+        window.startRecording = async () => {
+            try {
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(micStream);
+                audioChunks = [];
                 mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = async () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const reader = new FileReader(); reader.readAsDataURL(blob);
-                    reader.onloadend = async () => {
-                        const rid = location.hash.substring(1);
-                        await addDoc(collection(db, `rooms/${rid}/messages`), { uid: auth.currentUser.uid, name: userProfile.name, emoji: userProfile.emoji, voiceData: reader.result, createdAt: Date.now() });
-                    };
-                };
-                mediaRecorder.start(); btn.style.color = "red";
-            } else { mediaRecorder.stop(); btn.style.color = "inherit"; }
+                mediaRecorder.start();
+                document.getElementById('normal-input').style.display = 'none';
+                document.getElementById('recording-input').style.display = 'flex';
+            } catch (e) { alert("マイクを許可してください"); }
         };
 
+        const stopMic = () => {
+            if(micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+            document.getElementById('normal-input').style.display = 'flex';
+            document.getElementById('recording-input').style.display = 'none';
+        };
+
+        window.cancelRecording = () => { if(mediaRecorder) mediaRecorder.stop(); stopMic(); };
+
+        window.finishRecording = () => {
+            if(!mediaRecorder) return;
+            mediaRecorder.onstop = async () => {
+                const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                const reader = new FileReader(); reader.readAsDataURL(blob);
+                reader.onloadend = async () => {
+                    const rid = location.hash.substring(1);
+                    if(rid) await addDoc(collection(db, `rooms/${rid}/messages`), { uid: auth.currentUser.uid, name: userProfile.name, emoji: userProfile.emoji, voiceData: reader.result, createdAt: Date.now() });
+                };
+                stopMic();
+            };
+            mediaRecorder.stop();
+        };
+
+        // --- アプリ基本機能 ---
         const checkUser = () => {
             onAuthStateChanged(auth, async user => {
                 if (user) {
@@ -181,11 +198,11 @@
 
         window.changeTab = (t) => {
             document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
-            document.getElementById('bottom-input-bar').style.display = 'none';
+            document.getElementById('bottom-bar').style.display = 'none';
             if(t === 'home') { showView('home-view'); document.getElementById('tab-home').classList.add('active'); }
             else if(t === 'memo') { showView('memo-view'); loadMemo(); document.getElementById('tab-memo').classList.add('active'); }
             else if(t === 'profile') { showView('profile-view'); document.getElementById('tab-profile').classList.add('active'); }
-            else { showView('chat-view'); loadMessages(t); document.getElementById('bottom-input-bar').style.display = 'flex'; }
+            else { showView('chat-view'); loadMessages(t); document.getElementById('bottom-bar').style.display = 'block'; }
         };
 
         const showView = (id) => { document.querySelectorAll('.view').forEach(v => v.style.display = 'none'); document.getElementById(id).style.display = 'block'; };
@@ -193,7 +210,7 @@
         function loadRooms() {
             onSnapshot(query(collection(db, "rooms"), where("members", "array-contains", auth.currentUser.uid)), s => {
                 const list = document.getElementById('room-list'); list.innerHTML = "";
-                s.forEach(d => { list.innerHTML += `<div class="card" onclick="changeTab('${d.id}')" style="cursor:pointer; margin-bottom:10px;"># ${d.data().name}</div>`; });
+                s.forEach(d => { list.innerHTML += `<div class="card" onclick="changeTab('${d.id}')"># ${d.data().name}</div>`; });
             });
         }
 
@@ -221,7 +238,7 @@
             });
         }
 
-        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(e => alert("ミス"));
+        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(() => alert("ログイン失敗"));
         window.logout = () => signOut(auth).then(() => location.reload());
         window.updateProfile = async () => { const n = document.getElementById('p-name').value, e = document.getElementById('p-emoji').value; await setDoc(doc(db, "users", auth.currentUser.uid), {name:n, emoji:e}, {merge:true}); changeTab('home'); };
         window.createRoom = async () => { const n = prompt("ルーム名"); if(!n) return; const rid = Math.random().toString(36).substring(2, 8).toUpperCase(); await setDoc(doc(db, "rooms", rid), { name: n, members: [auth.currentUser.uid] }); changeTab(rid); };
