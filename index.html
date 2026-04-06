@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>COMON SECURE</title>
+    <title>COMON ID-PASS</title>
     <style>
         :root { --main-blue: #007aff; --bg-gray: #f0f2f5; --sidebar-w: 260px; }
         body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg-gray); color: #1c1e21; overflow-x: hidden; }
@@ -16,6 +16,7 @@
         .card { background: white; padding: 18px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px; }
         input, button, textarea { display: block; width: 100%; padding: 14px; margin: 12px 0; box-sizing: border-box; border-radius: 12px; border: 1px solid #ddd; font-size: 16px; }
         button { background: var(--main-blue); color: white; border: none; font-weight: bold; cursor: pointer; }
+        .secondary-btn { background: #8e8e93; margin-top: 5px; }
         
         #msg-list { display: flex; flex-direction: column-reverse; gap: 12px; }
         .msg-bubble { display: flex; align-items: flex-start; gap: 8px; max-width: 85%; }
@@ -26,16 +27,9 @@
         audio { height: 35px; width: 180px; margin-top: 5px; }
 
         .input-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 10px; display: flex; gap: 6px; border-top: 1px solid #ddd; z-index: 800; align-items: center; }
-        .btn-round { width: 44px; height: 44px; background: #f0f2f5; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 20px; flex-shrink: 0; border: 1px solid #ddd; cursor: pointer; color: black; }
-        .mic-btn.recording { animation: pulse 1s infinite; background: #ff3b30; color: white; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .btn-round { width: 44px; height: 44px; background: #f0f2f5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; border: 1px solid #ddd; cursor: pointer; }
         #overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.3); z-index:1050; }
-        
-        /* メンバー管理用 */
-        .header-btns { display: flex; gap: 8px; }
         .mini-btn { background: #eee; padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; color: #333; }
-        .member-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .kick-btn { background: #ff3b30; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 12px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -52,9 +46,8 @@
     <div class="header">
         <div onclick="toggleMenu()" style="font-size:26px; cursor:pointer;">☰</div>
         <div id="header-title" style="font-weight:900; flex:1; text-align:center;">COMON</div>
-        <div id="room-controls" class="header-btns" style="display:none;">
-            <div onclick="copyInviteURL()" class="mini-btn">🔗 招待</div>
-            <div onclick="showMembers()" class="mini-btn">👥 メンバー</div>
+        <div id="room-controls" style="display:none;">
+            <div onclick="showRoomInfo()" class="mini-btn">🔑 ID確認</div>
         </div>
         <div id="header-spacer" style="width:26px;"></div>
     </div>
@@ -65,7 +58,33 @@
                 <input type="email" id="email" placeholder="メール">
                 <input type="password" id="password" placeholder="パスワード">
                 <button onclick="login()">ログイン</button>
-                <button onclick="signUp()" style="background:#8e8e93">新規登録</button>
+                <button onclick="signUp()" class="secondary-btn">新規登録</button>
+            </div>
+        </div>
+
+        <div id="home-view" class="view">
+            <div class="card">
+                <button onclick="createRoom()">＋ ルームを新規作成</button>
+                <button onclick="showJoinForm()" class="secondary-btn">🔑 IDでルームに参加</button>
+            </div>
+            <div id="join-form" class="card" style="display:none; border: 2px solid var(--main-blue);">
+                <h4>ルームに参加</h4>
+                <input type="text" id="join-id" placeholder="ルームID">
+                <input type="text" id="join-pass" placeholder="6桁パスワード" maxlength="6">
+                <button onclick="joinRoom()">参加する</button>
+                <button onclick="this.parentElement.style.display='none'" class="secondary-btn">キャンセル</button>
+            </div>
+            <h4 style="margin: 10px 0;">参加中のルーム</h4>
+            <div id="room-list"></div>
+        </div>
+
+        <div id="chat-view" class="view">
+            <div id="msg-list"></div>
+            <div class="input-bar">
+                <a href="https://gigafile.nu/" target="_blank" class="btn-round" style="text-decoration:none;">📁</a>
+                <div id="mic-btn" class="btn-round" onclick="toggleRecording()">🎤</div>
+                <input type="text" id="chat-input" placeholder="メッセージ...">
+                <button onclick="sendMessage()" style="width:60px; margin:0;">送信</button>
             </div>
         </div>
 
@@ -74,45 +93,19 @@
                 <h3>プロフィール設定</h3>
                 <input type="text" id="p-emoji-input" placeholder="アイコン絵文字" maxlength="2" style="text-align:center; font-size:30px;">
                 <input type="text" id="p-name-input" placeholder="名前">
-                <button id="p-save-btn" onclick="updateProfile()">保存</button>
-            </div>
-        </div>
-
-        <div id="home-view" class="view">
-            <div class="card"><button onclick="createRoom()">＋ ルーム作成</button></div>
-            <h4 style="margin: 10px 0;">参加中のトークルーム</h4>
-            <div id="room-list"></div>
-        </div>
-
-        <div id="member-view" class="view">
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3>メンバー管理</h3>
-                    <button onclick="history.back()" style="width:60px; padding:5px; margin:0; background:#ccc;">戻る</button>
-                </div>
-                <div id="member-list-container"></div>
-            </div>
-        </div>
-
-        <div id="chat-view" class="view">
-            <div id="msg-list"></div>
-            <div class="input-bar">
-                <a href="https://gigafile.nu/" target="_blank" class="btn-round">📁</a>
-                <div id="mic-btn" class="btn-round" onclick="toggleRecording()">🎤</div>
-                <input type="text" id="chat-input" placeholder="メッセージ...">
-                <button onclick="sendMessage()" style="width:60px; margin:0;">送信</button>
+                <button onclick="updateProfile()">保存</button>
             </div>
         </div>
 
         <div id="memo-view" class="view">
-            <div class="card"><textarea id="memo-input" style="height:400px; width:100%;" placeholder="メモ帳"></textarea></div>
+            <div class="card"><textarea id="memo-input" style="height:400px; width:100%; border:none;" placeholder="メモ帳"></textarea></div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, doc, getDoc, setDoc, where, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, doc, getDoc, setDoc, where, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAP_BaYs01oniLSPQ5EOPV9m9brjKn-A2c",
@@ -144,32 +137,60 @@
         const showView = (id) => {
             document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
             document.getElementById(id).style.display = 'block';
-            document.getElementById('room-controls').style.display = (id === 'chat-view') ? 'flex' : 'none';
+            document.getElementById('room-controls').style.display = (id === 'chat-view') ? 'block' : 'none';
             document.getElementById('header-spacer').style.display = (id === 'chat-view') ? 'none' : 'block';
         };
 
-        window.copyInviteURL = () => {
-            navigator.clipboard.writeText(window.location.href).then(() => alert("招待リンクをコピーしたよ！"));
+        window.showJoinForm = () => { document.getElementById('join-form').style.display = 'block'; };
+
+        // ランダムなIDとパスワードを生成
+        const genID = () => Math.random().toString(36).substring(2, 8).toUpperCase();
+        const genPass = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+        window.createRoom = async () => {
+            const n = prompt("ルーム名を入力");
+            if(!n) return;
+            const rid = genID();
+            const rpass = genPass();
+            await setDoc(doc(db, "rooms", rid), {
+                name: n, host: auth.currentUser.uid, password: rpass,
+                members: [auth.currentUser.uid], createdAt: Date.now()
+            });
+            alert(`ルームを作成しました！\nID: ${rid}\nPASS: ${rpass}`);
+            location.hash = rid;
         };
 
-        window.showMembers = () => { location.hash = "members_" + location.hash.substring(1); };
+        window.joinRoom = async () => {
+            const id = document.getElementById('join-id').value.trim().toUpperCase();
+            const pass = document.getElementById('join-pass').value.trim();
+            if(!id || !pass) return alert("IDとパスワードを入れてね");
 
-        window.kickUser = async (uid) => {
-            if(!confirm("このユーザーを追放しますか？再進入もできなくなります。")) return;
-            const rid = location.hash.replace("#members_", "");
-            await updateDoc(doc(db, "rooms", rid), {
-                members: arrayRemove(uid),
-                banned: arrayUnion(uid) // 追放リストに追加
-            });
-            alert("追放しました");
-            location.reload();
+            const rSnap = await getDoc(doc(db, "rooms", id));
+            if(rSnap.exists()){
+                const rData = rSnap.data();
+                if(rData.password === pass) {
+                    await updateDoc(doc(db, "rooms", id), { members: arrayUnion(auth.currentUser.uid) });
+                    alert("参加しました！");
+                    document.getElementById('join-form').style.display = 'none';
+                    location.hash = id;
+                } else { alert("パスワードが違うよ"); }
+            } else { alert("そのIDのルームは見つからないよ"); }
+        };
+
+        window.showRoomInfo = async () => {
+            const rid = location.hash.substring(1);
+            const rSnap = await getDoc(doc(db, "rooms", rid));
+            if(rSnap.exists()){
+                const d = rSnap.data();
+                alert(`ルーム情報\nID: ${rid}\nPASS: ${d.password}`);
+            }
         };
 
         window.toggleRecording = async () => {
             const btn = document.getElementById('mic-btn');
             if (mediaRecorder && mediaRecorder.state === "recording") {
                 mediaRecorder.stop();
-                btn.classList.remove('recording');
+                btn.style.background = "#f0f2f5";
             } else {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -189,8 +210,8 @@
                         };
                     };
                     mediaRecorder.start();
-                    btn.classList.add('recording');
-                } catch(e) { alert("マイクを許可してください"); }
+                    btn.style.background = "#ff3b30";
+                } catch(e) { alert("マイクを許可してね"); }
             }
         };
 
@@ -202,72 +223,23 @@
                     const h = location.hash.substring(1);
                     if(h === "profile") showView('profile-view');
                     else if(h === "memo") showView('memo-view');
-                    else if(h.startsWith("members_")) {
-                        const rid = h.replace("members_", "");
-                        showView('member-view');
-                        renderMemberList(rid);
-                    }
-                    else if(h !== "") {
-                        const rSnap = await getDoc(doc(db, "rooms", h));
-                        if(rSnap.exists()){
-                            const rData = rSnap.data();
-                            // 追放リストに入っているかチェック
-                            if(rData.banned && rData.banned.includes(user.uid)){
-                                alert("あなたはこのルームから追放されているため入れません。");
-                                location.hash = ""; return;
-                            }
-                            await updateDoc(doc(db, "rooms", h), { members: arrayUnion(user.uid) }).catch(()=>{});
-                            showView('chat-view'); loadMessages(h);
-                        }
-                    }
+                    else if(h !== "") { showView('chat-view'); loadMessages(h); }
                     else { showView('home-view'); loadRooms(); }
                 } else { showView('profile-view'); }
             } else { showView('login-view'); }
         });
 
-        async function renderMemberList(rid) {
-            const rSnap = await getDoc(doc(db, "rooms", rid));
-            const container = document.getElementById('member-list-container');
-            container.innerHTML = "読み込み中...";
-            if(rSnap.exists()){
-                const data = rSnap.data();
-                const isHost = data.host === auth.currentUser.uid;
-                container.innerHTML = "";
-                for(const uid of data.members) {
-                    const uInfo = await getDoc(doc(db, "users", uid));
-                    const uData = uInfo.exists() ? uInfo.data() : {name:"不明", emoji:"👤"};
-                    const item = document.createElement('div');
-                    item.className = "member-item";
-                    item.innerHTML = `<div>${uData.emoji} ${uData.name} ${uid === data.host ? '(ホスト)' : ''}</div>`;
-                    // ホストだけが自分以外の参加者をキックできる
-                    if(isHost && uid !== data.host) {
-                        item.innerHTML += `<button class="kick-btn" onclick="kickUser('${uid}')">❌ 追放</button>`;
-                    }
-                    container.appendChild(item);
-                }
-            }
-        }
-
         window.updateProfile = async () => {
-            const name = document.getElementById('p-name-input').value || "名無し";
-            const emoji = document.getElementById('p-emoji-input').value || "👤";
-            await setDoc(doc(db, "users", auth.currentUser.uid), { name, emoji }, { merge: true });
+            await setDoc(doc(db, "users", auth.currentUser.uid), {
+                name: document.getElementById('p-name-input').value || "名無し",
+                emoji: document.getElementById('p-emoji-input').value || "👤"
+            }, { merge: true });
             location.hash = ""; location.reload();
         };
 
         window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(e => alert(e.message));
         window.signUp = () => createUserWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(e => alert(e.message));
         window.logout = () => signOut(auth).then(() => location.reload());
-
-        window.createRoom = async () => {
-            const n = prompt("ルーム名");
-            if(n) {
-                const d = await addDoc(collection(db, "rooms"), {
-                    name: n, host: auth.currentUser.uid, members: [auth.currentUser.uid], banned: [], createdAt: Date.now()
-                });
-                location.hash = d.id;
-            }
-        };
 
         window.sendMessage = async () => {
             const t = document.getElementById('chat-input').value, rid = location.hash.substring(1);
@@ -279,7 +251,8 @@
         };
 
         function loadRooms() {
-            onSnapshot(query(collection(db, "rooms"), where("members", "array-contains", auth.currentUser.uid), orderBy("createdAt", "desc")), s => {
+            const q = query(collection(db, "rooms"), where("members", "array-contains", auth.currentUser.uid), orderBy("createdAt", "desc"));
+            onSnapshot(q, s => {
                 const l = document.getElementById('room-list'); l.innerHTML = "";
                 s.forEach(d => l.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;"><b>${d.data().name}</b><button onclick="location.hash='${d.id}'" style="width:80px; margin:0;">入る</button></div>`);
             });
@@ -290,7 +263,7 @@
                 const l = document.getElementById('msg-list'); l.innerHTML = "";
                 s.forEach(d => {
                     const data = d.data(), isMine = data.uid === auth.currentUser.uid;
-                    let content = (data.text || "").replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:inherit; font-weight:bold;">$1</a>');
+                    let content = (data.text || "").replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:inherit;">$1</a>');
                     if (data.voiceData) content += `<audio controls src="${data.voiceData}"></audio>`;
                     const item = document.createElement('div');
                     item.className = `msg-bubble ${isMine ? 'mine' : ''}`;
