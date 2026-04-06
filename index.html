@@ -7,6 +7,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="COMMON">
     
+    <link rel="apple-touch-icon" href="icon-512.png">
+    <link rel="manifest" href="manifest.json">
+    
     <title>COMMON</title>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
     
@@ -17,7 +20,6 @@
             --netflix-red: #E50914; 
         }
         
-        /* 画面全体の高さ調整（ブラウザのバー対策） */
         html, body { height: 100%; height: -webkit-fill-available; margin: 0; padding: 0; overflow: hidden; background: #000; }
         body { font-family: 'Zen Maru Gothic', sans-serif; color: var(--text-main); }
         
@@ -38,16 +40,11 @@
         #app-body { 
             display: none; height: 100vh; flex-direction: column; 
             background: var(--bg-dark);
-            padding-top: env(safe-area-inset-top); /* ノッチ回避 */
+            padding-top: env(safe-area-inset-top);
         }
         .header { height: 50px; background: var(--bg-card); display: flex; align-items: center; justify-content: center; font-weight: 900; border-bottom: 1px solid #232428; }
+        .main-content { flex: 1; overflow-y: auto; padding-bottom: calc(140px + env(safe-area-inset-bottom)); }
         
-        .main-content { 
-            flex: 1; overflow-y: auto; 
-            padding-bottom: calc(130px + env(safe-area-inset-bottom)); /* 下部の余白確保 */
-        }
-        
-        /* チャット吹き出し */
         #msg-list { display: flex; flex-direction: column; padding: 15px; gap: 15px; }
         .msg-bubble { display: flex; align-items: flex-end; gap: 8px; max-width: 85%; }
         .msg-bubble.mine { align-self: flex-end; flex-direction: row-reverse; }
@@ -57,27 +54,21 @@
         .other .msg-content { background: var(--bg-bubble-other); color: var(--text-main); border-bottom-left-radius: 4px; }
         audio { height: 35px; width: 180px; margin-top: 5px; filter: invert(0.9); }
 
-        /* 入力バー（タブの上に固定） */
         .input-bar { 
-            position: fixed; 
-            bottom: calc(60px + env(safe-area-inset-bottom)); 
-            left: 0; right: 0; 
-            background: var(--bg-dark); 
+            position: fixed; bottom: calc(60px + env(safe-area-inset-bottom)); 
+            left: 0; right: 0; background: var(--bg-dark); 
             padding: 10px 15px; display: flex; gap: 12px; align-items: center; 
-            border-top: 1px solid #232428; 
-            z-index: 100;
+            border-top: 1px solid #232428; z-index: 100;
         }
         .input-box { background: var(--bg-card); border-radius: 25px; flex: 1; display: flex; align-items: center; padding: 0 15px; }
         .input-box input { background: none; border: none; color: #fff; flex: 1; padding: 12px 0; outline: none; font-family: 'Zen Maru Gothic', sans-serif; font-size: 16px; }
         
-        /* 下部タブバー（ホームバー対応） */
         .tab-bar { 
             position: fixed; bottom: 0; left: 0; right: 0; 
             height: calc(60px + env(safe-area-inset-bottom)); 
             background: var(--bg-card); border-top: 1px solid #232428; 
             display: flex; justify-content: space-around; align-items: flex-start;
-            padding-top: 8px;
-            z-index: 100;
+            padding-top: 8px; z-index: 100;
         }
         .tab-item { text-align: center; font-size: 10px; color: var(--text-muted); flex: 1; }
         .tab-item.active { color: #fff; }
@@ -97,16 +88,11 @@
 
     <div id="app-body">
         <div class="header" id="header-title">COMMON</div>
-        
         <div class="main-content" id="scroll-area">
             <div id="login-view" class="view"><div class="card"><h3>ログイン</h3><input type="email" id="email" placeholder="メール"><input type="password" id="password" placeholder="パスワード"><button onclick="login()">ログイン</button></div></div>
-            
             <div id="home-view" class="view"><div class="card"><h3>ROOMS</h3><div id="room-list"></div><button onclick="createRoom()" style="margin-top:15px;">＋ 新ルーム作成</button></div></div>
-            
             <div id="chat-view" class="view" style="padding:0;"><div id="msg-list"></div></div>
-            
             <div id="profile-view" class="view"><div class="card"><h2>設定</h2><input type="text" id="p-emoji" placeholder="絵文字"><input type="text" id="p-name" placeholder="お名前"><button onclick="updateProfile()">保存</button><button onclick="logout()" style="background:#f23f43; margin-top:20px;">ログアウト</button></div></div>
-            
             <div id="memo-view" class="view" style="height:100%;"><div class="card" style="height:300px;"><textarea id="memo-input" style="height:100%; width:100%; resize:none; background:none; border:none; color:#fff;" placeholder="自動保存メモ..."></textarea></div></div>
         </div>
 
@@ -133,7 +119,13 @@
         const app = initializeApp(config), auth = getAuth(app), db = getFirestore(app);
         
         let userProfile = null, audioCtx = null, unsubMsg = null, mediaRecorder = null, audioChunks = [];
-        let hasSeenIntro = false;
+
+        // PWA Service Worker 登録
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW fail', err));
+            });
+        }
 
         const initAudio = () => { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); };
         const playIntroSound = () => {
@@ -156,7 +148,7 @@
             const sp = document.getElementById('splash-screen'); sp.style.display = 'flex';
             document.getElementById('splash-logo').classList.add('animate-logo');
             playIntroSound();
-            setTimeout(() => { sp.style.display = 'none'; document.getElementById('app-body').style.display = 'flex'; hasSeenIntro = true; checkUser(); }, 3000);
+            setTimeout(() => { sp.style.display = 'none'; document.getElementById('app-body').style.display = 'flex'; checkUser(); }, 3000);
         };
 
         window.toggleRecording = async () => {
@@ -190,7 +182,6 @@
         window.changeTab = (t) => {
             document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
             document.getElementById('bottom-input-bar').style.display = 'none';
-            
             if(t === 'home') { showView('home-view'); document.getElementById('tab-home').classList.add('active'); }
             else if(t === 'memo') { showView('memo-view'); loadMemo(); document.getElementById('tab-memo').classList.add('active'); }
             else if(t === 'profile') { showView('profile-view'); document.getElementById('tab-profile').classList.add('active'); }
