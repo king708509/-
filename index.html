@@ -6,26 +6,98 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>COMMON</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
     
     <style>
         :root { 
-            --bg-main: #111111; --bg-card: #1c1c1e; --bg-input: #2c2c2e;
-            --text-main: #ffffff; --text-muted: #8e8e93; --my-blue: #007AFF; 
-            --line-green: #06c755; --border: #2c2c2e; --error-red: #ff3b30;
+            --bg-main: #111111; 
+            --bg-card: #1c1c1e; 
+            --bg-input: #2c2c2e;
+            --text-main: #ffffff; 
+            --text-muted: #8e8e93; 
+            --my-blue: #007AFF; 
+            --line-green: #06c755; 
+            --border: #2c2c2e; 
+            --error-red: #ff3b30;
         }
-        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: #000; }
-        body { font-family: 'Zen Maru Gothic', sans-serif; color: var(--text-main); -webkit-tap-highlight-color: transparent; }
-        
-        /* 起動演出 */
-        #enable-screen { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; z-index: 10000; }
-        #enable-btn { background: none; border: 1px solid #fff; color: #fff; padding: 12px 35px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 700; letter-spacing: 2px; }
-        #loading-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; z-index: 10000; text-align: center; }
-        #loading-bar-bg { width: 180px; height: 2px; background: #333; margin: auto; overflow: hidden; }
-        #loading-fill { width: 0%; height: 100%; background: #fff; transition: width 0.1s linear; }
-        #splash-screen { position: fixed; inset: 0; background: #000; display: none; align-items: center; justify-content: center; z-index: 9999; }
-        #splash-logo { color: #E50914; font-size: 48px; font-weight: 900; opacity: 0; letter-spacing: 8px; }
-        .animate-logo { animation: intro-animation 2.8s ease-in-out forwards; }
+
+        /* Base Styles */
+        html, body { 
+            height: 100%; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background: #000; 
+        }
+        body { 
+            font-family: 'Zen Maru Gothic', sans-serif; 
+            color: var(--text-main); 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        /* --- 起動演出 (Splash Screen) --- */
+        #enable-screen { 
+            position: fixed; 
+            inset: 0; 
+            background: #000; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 10000; 
+        }
+        #enable-btn { 
+            background: none; 
+            border: 1px solid #fff; 
+            color: #fff; 
+            padding: 12px 35px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            font-weight: 700; 
+            letter-spacing: 2px; 
+        }
+        #loading-container { 
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            display: none; 
+            z-index: 10000; 
+            text-align: center; 
+        }
+        #loading-bar-bg { 
+            width: 180px; 
+            height: 2px; 
+            background: #333; 
+            margin: auto; 
+            overflow: hidden; 
+        }
+        #loading-fill { 
+            width: 0%; 
+            height: 100%; 
+            background: #fff; 
+            transition: width 0.1s linear; 
+        }
+        #splash-screen { 
+            position: fixed; 
+            inset: 0; 
+            background: #000; 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 9999; 
+        }
+        #splash-logo { 
+            color: #E50914; 
+            font-size: 48px; 
+            font-weight: 900; 
+            opacity: 0; 
+            letter-spacing: 8px; 
+        }
+        .animate-logo { 
+            animation: intro-animation 2.8s ease-in-out forwards; 
+        }
         @keyframes intro-animation { 
             0% { opacity: 0; transform: scale(0.85); filter: blur(5px); } 
             25% { opacity: 1; transform: scale(1); filter: blur(0px); } 
@@ -33,67 +105,220 @@
             100% { opacity: 0; transform: scale(1.1); filter: blur(15px); } 
         }
 
-        #app-body { display: none; height: 100vh; flex-direction: column; background: var(--bg-main); padding-top: env(safe-area-inset-top); }
-        .header { height: 55px; background: var(--bg-main); display: flex; align-items: center; justify-content: center; border-bottom: 0.5px solid var(--border); position: relative; z-index: 100; }
-        .header-title { font-weight: 700; font-size: 16px; }
-        .header-right { position: absolute; right: 18px; font-size: 14px; color: var(--my-blue); cursor: pointer; font-weight: 700; }
+        /* --- Main App Layout --- */
+        #app-body { 
+            display: none; 
+            height: 100vh; 
+            flex-direction: column; 
+            background: var(--bg-main); 
+            padding-top: env(safe-area-inset-top); 
+        }
+        .header { 
+            height: 55px; 
+            background: var(--bg-main); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-bottom: 0.5px solid var(--border); 
+            position: relative; 
+            z-index: 100; 
+        }
+        .header-title { 
+            font-weight: 700; 
+            font-size: 16px; 
+        }
+        .header-right { 
+            position: absolute; 
+            right: 18px; 
+            font-size: 14px; 
+            color: var(--my-blue); 
+            cursor: pointer; 
+            font-weight: 700; 
+        }
 
-        /* 重要：メッセージが入力バーに被らないよう余白を調整 */
-        .main-content { flex: 1; overflow-y: auto; padding-bottom: calc(230px + env(safe-area-inset-bottom)); -webkit-overflow-scrolling: touch; }
-        #msg-list { display: flex; flex-direction: column; padding: 20px 15px 80px; gap: 20px; }
+        .main-content { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding-bottom: calc(180px + env(safe-area-inset-bottom)); 
+            -webkit-overflow-scrolling: touch; 
+        }
+        #msg-list { 
+            display: flex; 
+            flex-direction: column; 
+            padding: 20px 15px 40px; 
+            gap: 20px; 
+        }
 
-        /* チャット吹き出し */
-        .msg-bubble { display: flex; align-items: flex-start; gap: 12px; max-width: 85%; }
-        .msg-bubble.mine { align-self: flex-end; flex-direction: row-reverse; }
-        .user-icon { width: 40px; height: 40px; border-radius: 13px; background: #3a3a3c; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-        .msg-content { padding: 10px 15px; border-radius: 18px; font-size: 15px; line-height: 1.5; word-break: break-all; }
-        .mine .msg-content { background: var(--line-green); color: #fff; border-bottom-right-radius: 4px; }
-        .other .msg-content { background: var(--bg-card); color: #fff; border-bottom-left-radius: 4px; }
+        /* --- Chat Bubbles --- */
+        .msg-bubble { 
+            display: flex; 
+            align-items: flex-start; 
+            gap: 12px; 
+            max-width: 85%; 
+        }
+        .msg-bubble.mine { 
+            align-self: flex-end; 
+            flex-direction: row-reverse; 
+        }
+        .user-icon { 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 13px; 
+            background: #3a3a3c; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 20px; 
+            flex-shrink: 0; 
+        }
+        .msg-content { 
+            padding: 10px 15px; 
+            border-radius: 18px; 
+            font-size: 15px; 
+            line-height: 1.5; 
+            word-break: break-all; 
+        }
+        .mine .msg-content { 
+            background: var(--line-green); 
+            color: #fff; 
+            border-bottom-right-radius: 4px; 
+        }
+        .other .msg-content { 
+            background: var(--bg-card); 
+            color: #fff; 
+            border-bottom-left-radius: 4px; 
+        }
 
-        /* 入力バー */
-        .input-bar { position: fixed; bottom: calc(65px + env(safe-area-inset-bottom)); left: 0; right: 0; background: var(--bg-main); padding: 12px 15px; border-top: 0.5px solid var(--border); z-index: 200; display: none; }
-        .input-box-wrapper { background: var(--bg-input); border-radius: 22px; display: flex; align-items: center; padding: 0 15px; flex: 1; }
-        .input-box-wrapper input { background: none; border: none; color: #fff; flex: 1; padding: 10px 0; outline: none; font-size: 16px; font-family: inherit; }
+        /* --- Input Bar: Z-INDEX 999 修正済み --- */
+        .input-bar { 
+            position: fixed; 
+            bottom: calc(65px + env(safe-area-inset-bottom)); 
+            left: 0; 
+            right: 0; 
+            background: var(--bg-main); 
+            padding: 12px 15px; 
+            border-top: 0.5px solid var(--border); 
+            z-index: 999; 
+            display: none; 
+            align-items: center;
+        }
+        .input-box-wrapper { 
+            background: var(--bg-input); 
+            border-radius: 22px; 
+            display: flex; 
+            align-items: center; 
+            padding: 0 15px; 
+            flex: 1; 
+            min-height: 44px; 
+        }
+        .input-box-wrapper input { 
+            background: none; 
+            border: none; 
+            color: #fff; 
+            flex: 1; 
+            padding: 10px 0; 
+            outline: none; 
+            font-size: 16px; 
+            font-family: inherit; 
+        }
+        
+        /* 送信ボタン：z-index 1000 で確実にタップ可能に */
+        #send-btn { 
+            color: var(--my-blue); 
+            font-weight: 900; 
+            cursor: pointer; 
+            padding: 10px 5px; 
+            font-size: 16px; 
+            white-space: nowrap; 
+            position: relative;
+            z-index: 1000;
+        }
 
-        /* ボイスプレイヤーUI */
-        .voice-player { display: flex; align-items: center; gap: 12px; min-width: 180px; padding: 5px 0; }
-        .play-btn { background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; }
-        .seek-bar { flex: 1; height: 3px; -webkit-appearance: none; background: rgba(255,255,255,0.25); border-radius: 2px; }
-        .seek-bar::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; background: #fff; border-radius: 50%; }
+        /* --- Tab Bar --- */
+        .tab-bar { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            height: calc(65px + env(safe-area-inset-bottom)); 
+            background: var(--bg-card); 
+            border-top: 0.5px solid var(--border); 
+            display: flex; 
+            z-index: 1000; 
+        }
+        .tab-item { 
+            flex: 1; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: var(--text-muted); 
+            font-size: 11px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            flex-direction: column; 
+        }
+        .tab-item.active { 
+            color: #fff; 
+        }
 
-        /* タブバー */
-        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(65px + env(safe-area-inset-bottom)); background: var(--bg-card); border-top: 0.5px solid var(--border); display: flex; z-index: 300; }
-        .tab-item { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 11px; font-weight: 700; cursor: pointer; flex-direction: column; gap: 4px; }
-        .tab-item.active { color: #fff; }
-
-        /* モーダル */
-        #custom-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 11000; padding: 40px; backdrop-filter: blur(5px); }
-        .modal-card { background: var(--bg-card); width: 100%; max-width: 300px; border-radius: 18px; padding: 25px; text-align: center; border: 1px solid #333; }
-
-        /* フォーム系共通 */
-        .view { display: none; animation: view-fade 0.3s ease; }
-        @keyframes view-fade { from { opacity: 0; } to { opacity: 1; } }
-        .section-label { padding: 24px 16px 10px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; }
-        .form-padding { padding: 0 16px; }
-        input.base-input { background: var(--bg-card); border: 0.5px solid var(--border); color: #fff; padding: 15px; border-radius: 12px; width: 100%; box-sizing: border-box; margin-bottom: 15px; font-size: 16px; outline: none; }
-        button.action-btn { background: var(--my-blue); color: #fff; border: none; padding: 16px; border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; }
+        /* --- UI Elements --- */
+        .view { 
+            display: none; 
+            animation: view-fade 0.3s ease; 
+        }
+        @keyframes view-fade { 
+            from { opacity: 0; } 
+            to { opacity: 1; } 
+        }
+        .section-label { 
+            padding: 24px 16px 10px; 
+            font-size: 11px; 
+            color: var(--text-muted); 
+            text-transform: uppercase; 
+            font-weight: 700; 
+        }
+        .form-padding { 
+            padding: 0 16px; 
+        }
+        input.base-input { 
+            background: var(--bg-card); 
+            border: 0.5px solid var(--border); 
+            color: #fff; 
+            padding: 15px; 
+            border-radius: 12px; 
+            width: 100%; 
+            box-sizing: border-box; 
+            margin-bottom: 15px; 
+            font-size: 16px; 
+            outline: none; 
+        }
+        button.action-btn { 
+            background: var(--my-blue); 
+            color: #fff; 
+            border: none; 
+            padding: 16px; 
+            border-radius: 12px; 
+            font-weight: 700; 
+            width: 100%; 
+            cursor: pointer; 
+            font-size: 16px; 
+        }
     </style>
 </head>
 <body>
 
-    <div id="enable-screen"><button id="enable-btn" onclick="startSequence()">ENABLE START</button></div>
-    <div id="loading-container"><div id="loading-bar-bg"><div id="loading-fill"></div></div></div>
-    <div id="splash-screen"><div id="splash-logo">COMMON</div></div>
+    <div id="enable-screen">
+        <button id="enable-btn" onclick="startSequence()">ENABLE START</button>
+    </div>
 
-    <div id="custom-modal">
-        <div class="modal-card">
-            <div id="modal-title" style="font-weight:700; font-size:18px; margin-bottom:10px;"></div>
-            <div id="modal-desc" style="font-size:14px; color:var(--text-muted); line-height:1.6; margin-bottom:25px;"></div>
-            <div style="display:flex; gap:12px;">
-                <button class="action-btn" style="background:#3a3a3c; flex:1;" onclick="closeModal()">戻る</button>
-                <button id="modal-confirm-btn" class="action-btn" style="background:#ff3b30; flex:1;"></button>
-            </div>
+    <div id="loading-container">
+        <div id="loading-bar-bg">
+            <div id="loading-fill"></div>
         </div>
+    </div>
+
+    <div id="splash-screen">
+        <div id="splash-logo">COMMON</div>
     </div>
 
     <div id="app-body">
@@ -103,6 +328,7 @@
         </div>
         
         <div class="main-content" id="scroll-area">
+            
             <div id="auth-view" class="view">
                 <div class="section-label">ACCOUNT ACCESS</div>
                 <div class="form-padding">
@@ -127,13 +353,15 @@
                 </div>
             </div>
 
-            <div id="chat-view" class="view" style="padding:0;"><div id="msg-list"></div></div>
+            <div id="chat-view" class="view" style="padding:0;">
+                <div id="msg-list"></div>
+            </div>
             
             <div id="profile-view" class="view">
                 <div class="section-label">USER PROFILE</div>
                 <div class="form-padding">
                     <input type="text" id="p-name" class="base-input" placeholder="表示名">
-                    <input type="text" id="p-emoji" class="base-input" placeholder="絵文字（アイコン）">
+                    <input type="text" id="p-emoji" class="base-input" placeholder="絵文字アイコン">
                     <button class="action-btn" onclick="updateProfile()">設定を保存</button>
                     <button onclick="logout()" style="background:none; color:#ff3b30; border:none; margin-top:50px; width:100%; font-weight:700;">ログアウト</button>
                 </div>
@@ -142,220 +370,290 @@
             <div id="memo-view" class="view">
                 <div class="form-padding">
                     <div class="section-label" style="padding-left:0;">SYNC MEMO</div>
-                    <textarea id="memo-input" style="width:100%; height:450px; background:var(--bg-card); color:#fff; border:0.5px solid var(--border); border-radius:15px; padding:20px; box-sizing:border-box; outline:none; font-family:inherit; font-size:15px; line-height:1.6;" placeholder="ここに書いた内容は同期されます..."></textarea>
+                    <textarea id="memo-input" style="width:100%; height:450px; background:var(--bg-card); color:#fff; border:0.5px solid var(--border); border-radius:15px; padding:20px; box-sizing:border-box; outline:none; font-family:inherit; font-size:15px;" placeholder="自動同期されます..."></textarea>
                 </div>
             </div>
         </div>
 
         <div class="input-bar" id="bottom-bar">
-            <div id="normal-input" style="display: flex; gap: 15px; align-items: center;">
+            <div id="normal-input" style="display: flex; gap: 15px; align-items: center; width: 100%;">
                 <div style="cursor:pointer; font-size:24px;" onclick="startRecording()">🎤</div>
-                <div class="input-box-wrapper"><input type="text" id="chat-input" placeholder="メッセージを入力..."></div>
-                <div onclick="sendMessage()" style="color:var(--my-blue); font-weight:900; cursor:pointer;">送信</div>
-            </div>
-            <div id="recording-input" style="display: none; justify-content: space-between; align-items: center; width: 100%;">
-                <div onclick="cancelRecording()" style="color:var(--text-muted); font-size:14px; font-weight:700;">中止</div>
-                <div style="color:#ff3b30; font-weight:900; animation: flash 1s infinite;">● RECORDING</div>
-                <div onclick="finishRecording()" style="color:var(--my-blue); font-weight:900;">送信</div>
+                <div class="input-box-wrapper">
+                    <input type="text" id="chat-input" placeholder="メッセージ...">
+                </div>
+                <div id="send-btn" onclick="sendMessage()">送信</div>
             </div>
         </div>
-        <style>@keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }</style>
 
         <div class="tab-bar">
-            <div class="tab-item active" id="tab-home" onclick="changeTab('home')"><span>トーク</span></div>
-            <div class="tab-item" id="tab-memo" onclick="changeTab('memo')"><span>メモ</span></div>
-            <div class="tab-item" id="tab-profile" onclick="changeTab('profile')"><span>設定</span></div>
+            <div class="tab-item active" id="tab-home" onclick="changeTab('home')">トーク</div>
+            <div class="tab-item" id="tab-memo" onclick="changeTab('memo')">メモ</div>
+            <div class="tab-item" id="tab-profile" onclick="changeTab('profile')">設定</div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, doc, getDoc, setDoc, where, updateDoc, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, doc, getDoc, setDoc, where, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         
-        const config = { apiKey: "AIzaSyAP_BaYs01oniLSPQ5EOPV9m9brjKn-A2c", authDomain: "soshozi.firebaseapp.com", projectId: "soshozi", storageBucket: "soshozi.firebasestorage.app", messagingSenderId: "607624264440", appId: "1:607624264440:web:f3798bdc083a78b426190d" };
-        const app = initializeApp(config), auth = getAuth(app), db = getFirestore(app);
+        const config = { 
+            apiKey: "AIzaSyAP_BaYs01oniLSPQ5EOPV9m9brjKn-A2c", 
+            authDomain: "soshozi.firebaseapp.com", 
+            projectId: "soshozi", 
+            storageBucket: "soshozi.firebasestorage.app", 
+            messagingSenderId: "607624264440", 
+            appId: "1:607624264440:web:f3798bdc083a78b426190d" 
+        };
+        const app = initializeApp(config);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
         
-        let userProfile = null, audioCtx = null, unsubMsg = null, authMode = 'login', currentRoomId = null, lastMsgTime = 0;
-        let mediaRecorder = null, audioChunks = [], micStream = null;
+        let userProfile = null;
+        let audioCtx = null;
+        let unsubMsg = null;
+        let authMode = 'login';
+        let currentRoomId = null;
+        let lastMsgTime = 0;
 
-        // 【最強音響】ユーザー操作の瞬間にブラウザの音制限を完全解除
-        const unlockAudio = async () => {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') await audioCtx.resume();
-            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-            g.gain.setValueAtTime(0, audioCtx.currentTime); o.connect(g); g.connect(audioCtx.destination);
-            o.start(); o.stop(audioCtx.currentTime + 0.1);
+        // --- Audio Logic ---
+        const initAudio = async () => {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                await audioCtx.resume();
+            }
         };
 
         const playPopSound = (isSend) => {
             if(!audioCtx || audioCtx.state !== 'running') return;
             const now = audioCtx.currentTime;
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            // 送信は高め(880), 受信は少し低め(660)
             osc.frequency.setValueAtTime(isSend ? 880 : 660, now);
             osc.frequency.exponentialRampToValueAtTime(100, now + 0.12);
-            gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(0.1, now + 0.01); gain.gain.linearRampToValueAtTime(0, now + 0.12);
-            osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(now + 0.15);
+            
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.1, now + 0.01);
+            gain.gain.linearRampToValueAtTime(0, now + 0.12);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(now + 0.15);
         };
 
+        // --- Splash & Sequence ---
         window.startSequence = async () => {
-            await unlockAudio();
+            await initAudio();
             document.getElementById('enable-screen').style.display = 'none';
             document.getElementById('loading-container').style.display = 'block';
-            let prg = 0; const iv = setInterval(() => {
-                prg += 10; document.getElementById('loading-fill').style.width = prg + '%';
-                if(prg >= 100) { clearInterval(iv); runSplash(); }
-            }, 60);
+            
+            let p = 0;
+            const iv = setInterval(() => {
+                p += 5;
+                document.getElementById('loading-fill').style.width = p + '%';
+                if(p >= 100) {
+                    clearInterval(iv);
+                    runSplash();
+                }
+            }, 50);
         };
 
         const runSplash = () => {
             document.getElementById('loading-container').style.display = 'none';
-            const sp = document.getElementById('splash-screen'); sp.style.display = 'flex';
+            document.getElementById('splash-screen').style.display = 'flex';
             document.getElementById('splash-logo').classList.add('animate-logo');
-            // イントロ音復元
+            
+            // 起動音
             const now = audioCtx.currentTime;
-            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-            o.frequency.setValueAtTime(55, now); o.frequency.exponentialRampToValueAtTime(20, now + 2.5);
-            g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.2, now + 0.5); g.gain.linearRampToValueAtTime(0, now + 2.5);
-            o.connect(g); g.connect(audioCtx.destination); o.start(now); o.stop(now + 2.8);
-            setTimeout(() => { sp.style.display = 'none'; document.getElementById('app-body').style.display = 'flex'; checkAuth(); }, 2800);
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.frequency.setValueAtTime(55, now);
+            o.frequency.exponentialRampToValueAtTime(20, now + 2.5);
+            g.gain.setValueAtTime(0, now);
+            g.gain.linearRampToValueAtTime(0.2, now + 0.5);
+            g.gain.linearRampToValueAtTime(0, now + 2.5);
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.start(now);
+            o.stop(now + 2.8);
+
+            setTimeout(() => {
+                document.getElementById('splash-screen').style.display = 'none';
+                document.getElementById('app-body').style.display = 'flex';
+                checkAuth();
+            }, 2800);
         };
 
+        // --- Auth Logic ---
         const checkAuth = () => {
-            onAuthStateChanged(auth, async user => {
+            onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     const uDoc = await getDoc(doc(db, "users", user.uid));
-                    if (uDoc.exists() && uDoc.data().name) { 
-                        userProfile = uDoc.data(); changeTab('home'); 
-                    } else { changeTab('profile'); }
-                } else { changeTab('auth'); }
+                    if (uDoc.exists()) {
+                        userProfile = uDoc.data();
+                        changeTab('home');
+                    } else {
+                        changeTab('profile');
+                    }
+                } else {
+                    changeTab('auth');
+                }
             });
         };
 
-        window.changeTab = (t) => {
-            currentRoomId = (['home', 'memo', 'profile', 'auth'].includes(t)) ? null : t;
-            document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
-            const btn = document.getElementById(`tab-${['home','memo','profile'].includes(t)?t:'home'}`);
-            if(btn) btn.classList.add('active');
-            
-            document.getElementById('bottom-bar').style.display = 'none';
-            document.getElementById('header-action').style.display = 'none';
-            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-
-            const viewId = currentRoomId ? 'chat-view' : t + '-view';
-            document.getElementById(viewId).style.display = 'block';
-
-            if(currentRoomId) {
-                loadMessages(currentRoomId);
-                document.getElementById('bottom-bar').style.display = 'block';
-                document.getElementById('header-action').style.display = 'block';
-                document.getElementById('view-title').innerText = "TALK ROOM";
-            } else {
-                if(t==='home') loadRooms();
-                if(t==='memo') loadMemoData();
-                document.getElementById('view-title').innerText = t==='home'?'ROOMS':t==='memo'?'MEMO':'SETTINGS';
+        window.handleAuth = async () => {
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-password').value;
+            try {
+                if(authMode === 'login') {
+                    await signInWithEmailAndPassword(auth, email, pass);
+                } else {
+                    await createUserWithEmailAndPassword(auth, email, pass);
+                }
+            } catch (e) {
+                alert("認証エラー: " + e.message);
             }
         };
 
-        // メッセージ機能
+        window.toggleAuthMode = () => {
+            authMode = (authMode === 'login') ? 'signup' : 'login';
+            document.getElementById('auth-btn-text').innerText = (authMode === 'login') ? 'ログイン' : '新規登録';
+            document.getElementById('auth-toggle-msg').innerText = (authMode === 'login') ? '新規アカウント作成はこちら' : '既にアカウントをお持ちの方はこちら';
+        };
+
+        // --- Tab & View Navigation ---
+        window.changeTab = (tab) => {
+            // UI状態リセット
+            document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
+            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+            document.getElementById('bottom-bar').style.display = 'none';
+            document.getElementById('header-action').style.display = 'none';
+
+            if(tab === 'home') {
+                document.getElementById('tab-home').classList.add('active');
+                document.getElementById('home-view').style.display = 'block';
+                document.getElementById('view-title').innerText = "COMMON";
+                loadMyRooms();
+            } else if (tab === 'chat') {
+                document.getElementById('chat-view').style.display = 'block';
+                document.getElementById('bottom-bar').style.display = 'flex';
+                document.getElementById('header-action').style.display = 'block';
+                loadMessages();
+            } else if (tab === 'profile') {
+                document.getElementById('tab-profile').classList.add('active');
+                document.getElementById('profile-view').style.display = 'block';
+                document.getElementById('view-title').innerText = "SETTING";
+                if(userProfile) {
+                    document.getElementById('p-name').value = userProfile.name || "";
+                    document.getElementById('p-emoji').value = userProfile.emoji || "";
+                }
+            } else if (tab === 'memo') {
+                document.getElementById('tab-memo').classList.add('active');
+                document.getElementById('memo-view').style.display = 'block';
+                document.getElementById('view-title').innerText = "MEMO";
+            } else if (tab === 'auth') {
+                document.getElementById('auth-view').style.display = 'block';
+                document.getElementById('view-title').innerText = "WELCOME";
+            }
+        };
+
+        // --- Chat & Message Logic ---
         window.sendMessage = async () => {
-            const input = document.getElementById('chat-input'); if(!input.value.trim() || !currentRoomId) return;
-            await addDoc(collection(db, `rooms/${currentRoomId}/messages`), { 
-                uid: auth.currentUser.uid, name: userProfile.name, emoji: userProfile.emoji, text: input.value.trim(), createdAt: Date.now() 
-            });
-            input.value = ""; playPopSound(true);
-        };
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text || !currentRoomId) return;
 
-        function loadMessages(rid) {
-            if(unsubMsg) unsubMsg();
-            lastMsgTime = Date.now();
-            unsubMsg = onSnapshot(query(collection(db, `rooms/${rid}/messages`), orderBy("createdAt", "asc")), s => {
-                const list = document.getElementById('msg-list'); list.innerHTML = "";
-                s.forEach(d => {
-                    const data = d.data(), isMine = data.uid === auth.currentUser.uid;
-                    if (!isMine && data.createdAt > lastMsgTime) { playPopSound(false); lastMsgTime = data.createdAt; }
-                    let content = data.text || "";
-                    if(data.voiceData) {
-                        const vid = d.id; content = `<div class="voice-player"><button id="btn-${vid}" class="play-btn" onclick="vPlay('${vid}')">▶️</button><input id="seek-${vid}" type="range" class="seek-bar" value="0" oninput="vSeek('${vid}', this.value)"></div>`;
-                        setTimeout(() => initVPlayer(vid, data.voiceData), 50);
-                    }
-                    list.innerHTML += `<div class="msg-bubble ${isMine ? 'mine' : 'other'}"><div class="user-icon">${data.emoji || '👤'}</div><div class="msg-content">${content}</div></div>`;
-                });
-                const area = document.getElementById('scroll-area'); area.scrollTop = area.scrollHeight;
-            });
-        }
-
-        // ボイス録音復元
-        window.startRecording = async () => {
             try {
-                micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const mime = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm"].find(t => MediaRecorder.isTypeSupported(t));
-                mediaRecorder = new MediaRecorder(micStream, { mimeType: mime });
-                audioChunks = [];
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.start();
-                document.getElementById('normal-input').style.display = 'none';
-                document.getElementById('recording-input').style.display = 'flex';
-            } catch (e) { alert("マイク使用不可"); }
-        };
-        window.cancelRecording = () => { if(mediaRecorder) mediaRecorder.stop(); stopMic(); };
-        window.finishRecording = () => {
-            mediaRecorder.onstop = async () => {
-                const reader = new FileReader(); reader.readAsDataURL(new Blob(audioChunks));
-                reader.onloadend = async () => {
-                    await addDoc(collection(db, `rooms/${currentRoomId}/messages`), { 
-                        uid: auth.currentUser.uid, name: userProfile.name, emoji: userProfile.emoji, voiceData: reader.result, createdAt: Date.now() 
-                    });
-                    playPopSound(true);
-                };
-                stopMic();
-            };
-            mediaRecorder.stop();
-        };
-        const stopMic = () => { micStream.getTracks().forEach(t => t.stop()); document.getElementById('normal-input').style.display = 'flex'; document.getElementById('recording-input').style.display = 'none'; };
+                // 送信音を鳴らす
+                playPopSound(true);
 
-        // ボイス再生復元
-        window.initVPlayer = (id, url) => {
-            const a = new Audio(url); const b = document.getElementById(`btn-${id}`), s = document.getElementById(`seek-${id}`);
-            a.onloadedmetadata = () => s.max = a.duration; a.ontimeupdate = () => s.value = a.currentTime; a.onended = () => { b.innerText = "▶️"; s.value = 0; };
-            window[`vPlay_${id}`] = () => { if(a.paused){ a.play(); b.innerText = "⏸️"; } else { a.pause(); b.innerText = "▶️"; } };
-            window[`vSeek_${id}`] = (v) => a.currentTime = v;
+                await addDoc(collection(db, "rooms", currentRoomId, "messages"), {
+                    uid: auth.currentUser.uid,
+                    name: userProfile.name || "Unknown",
+                    emoji: userProfile.emoji || "👤",
+                    text: text,
+                    time: Date.now()
+                });
+                input.value = "";
+            } catch (e) {
+                console.error("送信エラー:", e);
+            }
         };
-        window.vPlay = (id) => window[`vPlay_${id}`]();
-        window.vSeek = (id, v) => window[`vSeek_${id}`](v);
 
-        // ルーム管理復元
-        window.loadRooms = () => { onSnapshot(query(collection(db, "rooms"), where("members", "array-contains", auth.currentUser.uid)), s => { const list = document.getElementById('room-list'); list.innerHTML = ""; s.forEach(d => { list.innerHTML += `<div style="padding:18px; border-bottom:0.5px solid #222; display:flex; justify-content:space-between;" onclick="changeTab('${d.id}')"><span>${d.data().name}</span><span style="color:#444;">ID:${d.id} ›</span></div>`; }); }); };
-        window.joinRoom = async () => {
-            const rid = document.getElementById('join-id').value.toUpperCase().trim(), pass = document.getElementById('join-pass').value.trim();
-            const rDoc = await getDoc(doc(db, "rooms", rid));
-            if(rDoc.exists() && rDoc.data().password === pass) { await updateDoc(doc(db, "rooms", rid), { members: arrayUnion(auth.currentUser.uid) }); changeTab(rid); } else { alert("IDまたはパスワードが違います"); }
-        };
-        window.createRoom = () => {
-            const n = prompt("ルーム名"); if(!n) return;
-            const p = prompt("6桁パスワード", "000000"); if(!p || p.length !== 6) return;
-            const rid = Math.random().toString(36).substring(2, 8).toUpperCase();
-            setDoc(doc(db, "rooms", rid), { name: n, password: p, host: auth.currentUser.uid, members: [auth.currentUser.uid], createdAt: Date.now() }).then(() => changeTab(rid));
-        };
-        window.showRoomMenu = async () => {
-            const rDoc = await getDoc(doc(db, "rooms", currentRoomId));
-            const isHost = rDoc.data().host === auth.currentUser.uid;
-            openModal(isHost ? "ルーム削除" : "ルーム退出", isHost ? "このルームを完全に削除しますか？" : "このルームから退出しますか？", "実行", async () => {
-                if(isHost) await deleteDoc(doc(db, "rooms", currentRoomId));
-                else await updateDoc(doc(db, "rooms", currentRoomId), { members: arrayRemove(auth.currentUser.uid) });
-                changeTab('home');
+        const loadMessages = () => {
+            if (unsubMsg) unsubMsg();
+            const q = query(collection(db, "rooms", currentRoomId, "messages"), orderBy("time", "asc"));
+            
+            unsubMsg = onSnapshot(q, (snap) => {
+                const list = document.getElementById('msg-list');
+                list.innerHTML = "";
+                
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const isMine = d.uid === auth.currentUser.uid;
+                    
+                    // 受信音判定
+                    if (!isMine && d.time > lastMsgTime && lastMsgTime !== 0) {
+                        playPopSound(false);
+                    }
+                    if (d.time > lastMsgTime) lastMsgTime = d.time;
+
+                    const div = document.createElement('div');
+                    div.className = `msg-bubble ${isMine ? 'mine' : 'other'}`;
+                    div.innerHTML = `
+                        <div class="user-icon">${d.emoji || "👤"}</div>
+                        <div class="msg-content">${d.text}</div>
+                    `;
+                    list.appendChild(div);
+                });
+                
+                // 最下部へスクロール
+                const area = document.getElementById('scroll-area');
+                area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
             });
         };
 
-        // その他
-        window.handleAuth = async () => { const e = document.getElementById('auth-email').value, p = document.getElementById('auth-password').value; try { if(authMode==='login') await signInWithEmailAndPassword(auth, e, p); else await createUserWithEmailAndPassword(auth, e, p); } catch(err) { alert(err.message); } };
-        window.toggleAuthMode = () => { authMode = (authMode === 'login' ? 'signup' : 'login'); document.getElementById('auth-btn-text').innerText = (authMode === 'login' ? 'ログイン' : '新規登録'); };
-        window.updateProfile = async () => { const n = document.getElementById('p-name').value, e = document.getElementById('p-emoji').value; if(!n) return; await setDoc(doc(db, "users", auth.currentUser.uid), {name:n, emoji:e}, {merge:true}); location.reload(); };
-        window.loadMemoData = async () => { const m = await getDoc(doc(db, "memos", auth.currentUser.uid)); if(m.exists()) document.getElementById('memo-input').value = m.data().text; };
-        document.getElementById('memo-input').oninput = async (e) => { if(auth.currentUser) await setDoc(doc(db, "memos", auth.currentUser.uid), { text: e.target.value }); };
-        window.logout = () => signOut(auth).then(() => location.reload());
-        window.openModal = (t, d, c, f) => { document.getElementById('modal-title').innerText = t; document.getElementById('modal-desc').innerText = d; document.getElementById('modal-confirm-btn').innerText = c; document.getElementById('modal-confirm-btn').onclick = () => { f(); closeModal(); }; document.getElementById('custom-modal').style.display = 'flex'; };
-        window.closeModal = () => document.getElementById('custom-modal').style.display = 'none';
+        // --- Room & Profile Data ---
+        window.loadMyRooms = () => {
+            const q = query(collection(db, "rooms"), where("members", "array-contains", auth.currentUser.uid));
+            onSnapshot(q, (snap) => {
+                const list = document.getElementById('room-list');
+                list.innerHTML = "";
+                snap.forEach(doc => {
+                    const r = doc.data();
+                    const div = document.createElement('div');
+                    div.className = "form-padding";
+                    div.innerHTML = `<button class="action-btn" style="background:var(--bg-card); margin-bottom:10px; text-align:left;">${r.name}</button>`;
+                    div.onclick = () => {
+                        currentRoomId = doc.id;
+                        document.getElementById('view-title').innerText = r.name;
+                        changeTab('chat');
+                    };
+                    list.appendChild(div);
+                });
+            });
+        };
+
+        window.updateProfile = async () => {
+            const name = document.getElementById('p-name').value;
+            const emoji = document.getElementById('p-emoji').value;
+            await setDoc(doc(db, "users", auth.currentUser.uid), { name, emoji }, { merge: true });
+            userProfile = { name, emoji };
+            alert("プロフィールを更新しました");
+        };
+
+        window.logout = () => signOut(auth);
+
+        // Enterキーで送信
+        document.getElementById('chat-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
     </script>
 </body>
 </html>
