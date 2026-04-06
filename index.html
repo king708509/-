@@ -159,14 +159,35 @@
         let mediaRecorder;
         let audioChunks = [];
 
+        // ユーザー情報をUIにロードする関数
+        const loadUserProfile = async (user) => {
+            if (!user) return;
+            
+            const uDoc = await getDoc(doc(db, "users", user.uid));
+            if (uDoc.exists()) {
+                userProfile = uDoc.data();
+            } else {
+                userProfile = { name: "", emoji: "👤", uid: user.uid };
+            }
+
+            document.getElementById('p-name').value = userProfile.name || "";
+            document.getElementById('p-emoji').value = userProfile.emoji || "👤";
+        };
+
         window.changeTab = async (tab) => {
             const user = auth.currentUser;
             if (!user) { renderTab('auth'); return; }
-            if (tab !== 'profile' && !userProfile) {
-                const uDoc = await getDoc(doc(db, "users", user.uid));
-                if (uDoc.exists()) userProfile = uDoc.data();
-                if (!userProfile || !userProfile.name) { renderTab('profile'); return; }
+
+            if (tab !== 'profile') {
+                if (!userProfile || userProfile.uid !== user.uid) {
+                    await loadUserProfile(user);
+                }
+                if (!userProfile || !userProfile.name) {
+                    renderTab('profile');
+                    return;
+                }
             }
+
             renderTab(tab);
         };
 
@@ -192,12 +213,8 @@
             if (tab === 'chat') loadMessages();
         }
 
-        // ギガファイル便を開く
-        window.openGigaFile = () => {
-            window.open('https://gigafile.nu/', '_blank');
-        };
+        window.openGigaFile = () => { window.open('https://gigafile.nu/', '_blank'); };
 
-        // ボイスメモ
         window.toggleRecording = async () => {
             if (!mediaRecorder || mediaRecorder.state === "inactive") {
                 try {
@@ -205,7 +222,6 @@
                     const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg';
                     mediaRecorder = new MediaRecorder(stream, { mimeType });
                     audioChunks = [];
-
                     mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
                     mediaRecorder.onstop = () => {
                         const blob = new Blob(audioChunks, { type: mimeType });
@@ -215,13 +231,10 @@
                         div.innerHTML = `<audio controls src="${url}" style="width:100%"></audio><p style="font-size:10px; color:gray; margin:4px 0 0;">${new Date().toLocaleString()}</p>`;
                         document.getElementById('audio-list').prepend(div);
                     };
-
                     mediaRecorder.start();
                     document.getElementById('record-btn').classList.add('recording');
                     document.getElementById('record-status').innerText = "録音中... (タップで停止)";
-                } catch (err) {
-                    alert("マイクの使用を許可してください");
-                }
+                } catch (err) { alert("マイクの使用を許可してください"); }
             } else {
                 mediaRecorder.stop();
                 document.getElementById('record-btn').classList.remove('recording');
@@ -236,9 +249,15 @@
             window.changeTab(auth.currentUser ? 'home' : 'auth');
         };
 
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (document.getElementById('app-body').style.display === 'flex') {
-                window.changeTab(user ? 'home' : 'auth');
+                if (user) {
+                    await loadUserProfile(user);
+                    window.changeTab('home');
+                } else {
+                    userProfile = null;
+                    renderTab('auth');
+                }
             }
         });
 
@@ -247,8 +266,13 @@
             const pass = document.getElementById('auth-password').value;
             if(!email || !pass) return alert("未入力");
             try {
-                if(authMode === 'login') await signInWithEmailAndPassword(auth, email, pass);
-                else await createUserWithEmailAndPassword(auth, email, pass);
+                if(authMode === 'login') {
+                    const res = await signInWithEmailAndPassword(auth, email, pass);
+                    await loadUserProfile(res.user);
+                } else {
+                    const res = await createUserWithEmailAndPassword(auth, email, pass);
+                    await loadUserProfile(res.user);
+                }
             } catch (e) { alert(e.message); }
         };
 
@@ -258,18 +282,25 @@
             document.getElementById('auth-toggle-msg').innerText = (authMode === 'login') ? '新規登録はこちら' : 'ログインはこちら';
         };
 
-        window.logout = () => signOut(auth).then(() => location.reload());
+        window.logout = () => signOut(auth).then(() => {
+            userProfile = null;
+            location.reload();
+        });
 
         window.updateProfile = async () => {
             const name = document.getElementById('p-name').value.trim();
             const emoji = document.getElementById('p-emoji').value.trim() || "👤";
             if(!name) return alert("名前必須");
-            await setDoc(doc(db, "users", auth.currentUser.uid), { name, emoji }, { merge: true });
-            userProfile = { name, emoji };
+            
+            const uid = auth.currentUser.uid;
+            await setDoc(doc(db, "users", uid), { name, emoji, uid }, { merge: true });
+            
+            userProfile = { name, emoji, uid };
             window.changeTab('home');
         };
 
         window.loadMyRooms = () => {
+            if(!auth.currentUser) return;
             if(unsubRooms) unsubRooms();
             const q = query(collection(db, "rooms"), where("members", "array-contains", auth.currentUser.uid));
             unsubRooms = onSnapshot(q, (snap) => {
@@ -291,12 +322,19 @@
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
             if(!text) return;
-            const msgData = { uid: auth.currentUser.uid, emoji: userProfile?.emoji || "👤", text, time: Date.now() };
+            
+            const msgData = { 
+                uid: auth.currentUser.uid, 
+                emoji: userProfile?.emoji || "👤", 
+                text, 
+                time: Date.now() 
+            };
             input.value = "";
             await addDoc(collection(db, "rooms", currentRoomId, "messages"), msgData);
         };
 
         function loadMessages() {
+            if (!currentRoomId) return;
             if (unsubMsg) unsubMsg();
             const q = query(collection(db, "rooms", currentRoomId, "messages"), orderBy("time", "asc"));
             unsubMsg = onSnapshot(q, (snap) => {
@@ -325,6 +363,7 @@
         window.joinRoom = async () => {
             const rid = document.getElementById('join-id').value.trim();
             const pass = document.getElementById('join-pass').value.trim();
+            if(!rid || !pass) return;
             const rDoc = await getDoc(doc(db, "rooms", rid));
             if(rDoc.exists() && rDoc.data().pass === pass) {
                 await updateDoc(doc(db, "rooms", rid), { members: arrayUnion(auth.currentUser.uid) });
